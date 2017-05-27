@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block header %}
+    <div>
+        header
+    </div>
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <div id="upload">
+        <form @submit.prevent="submit">
+            <div class="field">
+                <input class="btn btn-info btn-xs" type="file" v-model="myFile" name='file' multiple size="50">
+            </div>
+            <input class="btn btn-success btn-xs" type="submit" value="upload">
+        </form>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <p>
+        footer © 2011 
+    </p>
+{% endblock %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#upload',
+            data: {
+                apiUrl: '/upload'
+            },
+            methods: {
+                submit: function(event) {
+                    // FormData支援把 Form 元素丟進去
+                    var formData = new FormData(event.target)
+
+                    this.$http.post(this.apiUrl, formData)
+                        .then(function (response) {
+                    }, function (err) {
+                        console.log(err)
+                    })
+
+                }
+            }
+
+        })
+    </script>
+{% endblock %}

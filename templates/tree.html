@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+
+{% block header %}
+    <div>
+        header
+    </div>
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <!-- item template -->
+    <script type="text/x-template" id="item-template">
+        <li>
+            <div
+            :class="{bold: isFolder}"
+            @click="toggle"
+            @dblclick="changeType">
+            {{model.name}}
+            <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
+            </div>
+            <ul v-show="open" v-if="isFolder">
+            <item
+                class="item"
+                v-for="model in model.children"
+                :model="model">
+            </item>
+            <li class="add" @click="addChild">+</li>
+            </ul>
+        </li>
+    </script>
+
+    <p>(You can double click on an item to turn it into a folder.)</p>
+
+    <!-- the demo root element -->
+    <div  id="demo">
+        <ul>
+            <item
+                class="item"
+                :model="treeData">
+            </item>
+        </ul>
+        <button v-on:click="getTreeData">show</button>
+    </div>
+{% endblock %}
+
+{% block footer %}
+    <p>
+        footer © 2011 
+    </p>
+{% endblock %}
+
+{% block script %}
+<script>
+
+    // define the item component
+    Vue.component('item', {
+        template: '#item-template',
+        props: {
+            model: Object
+        },
+        data: function () {
+            return {
+            open: false
+            }
+        },
+        computed: {
+            isFolder: function () {
+            return this.model.children &&
+                this.model.children.length
+            }
+        },
+        methods: {
+            toggle: function () {
+            if (this.isFolder) {
+                this.open = !this.open
+            }
+            },
+            changeType: function () {
+            if (!this.isFolder) {
+                Vue.set(this.model, 'children', [])
+                this.addChild()
+                this.open = true
+            }
+            },
+            addChild: function () {
+            this.model.children.push({
+                name: 'new stuff'
+            })
+            }
+        }
+    })
+
+    // boot up the demo
+    var demo = new Vue({
+        el: '#demo',
+        data: {
+            treeData: {},
+            apiUrl: '/api/treeData'
+        },
+        methods: {
+            getTreeData: function () {
+                this.$http.get(this.apiUrl)
+                    .then(function (response) {
+                        this.treeData = response.data
+                }, function (err) {
+                    console.log(err)
+                })
+            }
+        }
+    })
+</script>
+{% endblock %}
