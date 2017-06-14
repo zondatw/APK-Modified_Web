@@ -158,18 +158,22 @@ def getEmulatorDevices():
     ret_mes = subprocess.check_output(emulator_list_format, shell=True)
     device_list = [device.strip() for device in ret_mes.decode('utf-8').split('\n') if device]
     flask_config.devices_list = []
+    return_devices_list = []
     for idx, device in enumerate(device_list):
         flask_config.devices_list.append(device)
+        return_devices_list.append({
+            "idx": idx,
+            "device": device})
         print(idx, ':', device)
-    return jsonify(flask_config.devices_list)
+    return jsonify(return_devices_list)
 
 
 @app.route('/api/startEmulatorDevices', methods=['POST'])
 def startEmulatorDevices():
-    device_idx = int(request.data.get('device_idx'))
+    device = str(request.data,'utf-8')
     open_emulator_format = "\"{emulator_path}\" -avd {device} -netdelay none -netspeed full" \
 	    .format(emulator_path=flask_config.emulator_path, 
-                device=flask_config.device_list[device_idx])
+                device=device)
     ret_mes = subprocess.check_output(open_emulator_format, shell=True)
     return jsonify()
 
@@ -184,25 +188,30 @@ def getStartEmulatorDevices():
     device_list = [device.split('\t')[0].strip() for device in ret_mes.decode('utf-8').split('\n') \
         if device.strip() and len(device.split('\t')) == 2 and 'device' in device.split('\t')[-1]]
     flask_config.start_devices_list = []
+    return_start_devices_list = []
     for idx, device in enumerate(device_list):
         flask_config.start_devices_list.append(device)
+        return_start_devices_list.append({
+            'idx': idx,
+            'device': device
+        })
         print(idx, ':', device)
-    return jsonify(flask_config.start_devices_list)
+    return jsonify(return_start_devices_list)
 
 
 @app.route('/api/reinstallAPK', methods=['PUT'])
 def reinstallAPK():
-    device_idx = int(request.data.get('device_idx'))
+    device = str(request.data,'utf-8')
     uninstall_format = "\"{adb_path}\" -s {device} uninstall {package_name}" \
         .format(adb_path=flask_config.adb_path, 
-                device=flask_config.start_devices_list[device_idx], 
+                device=device, 
                 package_name=flask_config.package_name)
     ret_mes = subprocess.check_output(uninstall_format, shell=True)
     print(ret_mes.decode('utf-8'))
 
     install_format = "\"{adb_path}\" -s {device} install {apk_file_path}" \
         .format(adb_path=flask_config.adb_path, 
-                device=flask_config.start_devices_list[device_idx], 
+                device=device, 
                 apk_file_path=flask_config.new_apk_file_path)
     ret_mes = subprocess.check_output(install_format, shell=True)
     print(ret_mes.decode('utf-8'))
@@ -234,7 +243,25 @@ def upload_file():
             .format(apk_file_dir=flask_config.apk_file_dir,
                     apk_name=flask_config.apk_name)
         f.save(flask_config.apk_file_path)
+        unpack_apk()
     return render_template('upload.html')
+
+
+@app.route('/highlight')
+def highlight():
+    return render_template('highlight.html')
+
+@app.route('/test_index')
+def testindex():
+    return render_template('test_index.html')
+
+@app.route('/emulator')
+def emulator():
+    return render_template('emulator.html')
+
+@app.route('/reinstall')
+def reinstall():
+    return render_template('reinstall.html')
 
 
 if __name__ == '__main__':

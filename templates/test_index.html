@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block header %}
+    <div>
+        header
+    </div>
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <router-link to="/">Go to index</router-link>
+    <router-link to="/upload">Go to upload</router-link>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block script %}
+    <script>
+        const frameCompent = { template: '<iframe> :src="$route.path" style="xxx">' }
+        var routes = [
+          { path: '/:menu/:select', component: frameCompent },
+        ]
+        var router = new VueRouter({
+            routes:routes
+        })
+        const app = new Vue({
+            router
+        }).$mount('#app')
+
+
+    </script>
+{% endblock %}

@@ -1,9 +1,6 @@
 {% extends "layout.html" %}
 
 {% block header %}
-    <div>
-        header
-    </div>
 {% endblock %}
 
 {% block nav %}
@@ -11,19 +8,24 @@
 
 {% block section %}
     <div id="upload">
-        <form @submit.prevent="submit">
-            <div class="field">
-                <input class="btn btn-info btn-xs" type="file" v-model="myFile" name='file' multiple size="50">
-            </div>
-            <input class="btn btn-success btn-xs" type="submit" value="upload">
+        <form @submit.prevent="submit" class="form-horizontal">
+            <fieldset>
+                <div class="form-group">
+                    <div class="field">
+                        <input type="file" v-model="myFile" name='file' multiple size="50">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-10 col-lg-offset-2">
+                        <button type="submit" class="btn btn-success">upload</button>
+                    </div>
+                </div>
+            </fieldset>
         </form>
     </div>
 {% endblock %}
 
 {% block footer %}
-    <p>
-        footer © 2011 
-    </p>
 {% endblock %}
 
 {% block script %}
@@ -31,7 +33,8 @@
         new Vue({
             el: '#upload',
             data: {
-                apiUrl: '/upload'
+                apiUrl: '/upload',
+                redirectURL: '/tree'
             },
             methods: {
                 submit: function(event) {
@@ -40,6 +43,7 @@
 
                     this.$http.post(this.apiUrl, formData)
                         .then(function (response) {
+                            window.location.href = this.redirectURL;
                     }, function (err) {
                         console.log(err)
                     })

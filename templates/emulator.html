@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <div id="emulator_list">
+        <p>
+            <select v-model="selected">
+                <option v-for="option in options" v-bind:device="option.device">
+                    {{ option.device }}
+                </option>
+            </select>
+        </p>
+        <p>
+            <span>Selected: {{ selected }}</span>
+        </p>
+        <p>
+            <button v-on:click="startEmulator">start</button>
+        </p>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#emulator_list',
+            data: {
+                selected: '',
+                options: [],
+                apiUrl: "/api/getEmulatorDevices",
+                apiUrl2: "/api/startEmulatorDevices"
+            },
+            methods: {
+                getEmulatorDevices: function () {
+                    this.$http.get(this.apiUrl)
+                        .then(function (response) {
+                            this.options = response.data
+                    }, function (err) {
+                        console.log(err)
+                    })
+                },
+                startEmulator: function () {
+                    let device = this.selected;
+                    if (device != '') {
+                        this.$http.post(this.apiUrl2, device) 
+                            .then(function (response) {
+                        }, function (err) {
+                            console.log(err)
+                        })
+                    }
+                }
+            }, 
+            mounted() { this.getEmulatorDevices() }
+        })
+    </script>
+{% endblock %}

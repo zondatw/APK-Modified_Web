@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <div id="start_emulator_list">
+        <p>
+            <select v-model="selected">
+                <option v-for="option in options" v-bind:device="option.device">
+                    {{ option.device }}
+                </option>
+            </select>
+        </p>
+        <p>
+            <span>Selected: {{ selected }}</span>
+        </p>
+        <p>
+            <button v-on:click="reinstallAPK">reinstall</button>
+        </p>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#start_emulator_list',
+            data: {
+                selected: '',
+                options: [],
+                apiUrl: "/api/getStartEmulatorDevices",
+                apiUrl2: "/api/reinstallAPK"
+            },
+            methods: {
+                getStartEmulatorDevices: function () {
+                    this.$http.get(this.apiUrl)
+                        .then(function (response) {
+                            this.options = response.data
+                    }, function (err) {
+                        console.log(err)
+                    })
+                },
+                reinstallAPK: function () {
+                    let device = this.selected;
+                    if (device != '') {
+                        this.$http.put(this.apiUrl2, device) 
+                            .then(function (response) {
+                        }, function (err) {
+                            console.log(err)
+                        })
+                    }
+                }
+            }, 
+            mounted() { this.getStartEmulatorDevices() }
+        })
+    </script>
+{% endblock %}

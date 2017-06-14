@@ -1,9 +1,6 @@
 {% extends "layout.html" %}
 
 {% block header %}
-    <div>
-        header
-    </div>
 {% endblock %}
 
 {% block nav %}
@@ -34,7 +31,7 @@
     <p>(You can double click on an item to turn it into a folder.)</p>
 
     <!-- the demo root element -->
-    <div  id="demo">
+    <div id="tree">
         <ul>
             <item
                 class="item"
@@ -46,9 +43,6 @@
 {% endblock %}
 
 {% block footer %}
-    <p>
-        footer © 2011 
-    </p>
 {% endblock %}
 
 {% block script %}
@@ -93,8 +87,8 @@
     })
 
     // boot up the demo
-    var demo = new Vue({
-        el: '#demo',
+    var tree = new Vue({
+        el: '#tree',
         data: {
             treeData: {},
             apiUrl: '/api/treeData'
