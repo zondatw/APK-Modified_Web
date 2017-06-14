@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="../static/css/bootstrap.min.css" media="screen">
+
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+        <script src="../static/js/bootstrap.min.js"></script>
         <script src="../static/js/vue.js"></script>
         <script src="../static/js/vue-resource@1.3.3.js"></script>
         <title>APK WEB</title>
@@ -13,39 +16,41 @@
     <body class="">
         <header>
         </header>
-        
-        <nav class="navbar navbar-default">
-            <div class="container">
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="/upload">APK Modify Web</a>
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                </div>
 
-                <div class="collapse navbar-collapse" id="navbar-main">
-                    <ul class="nav navbar-nav">
-                        <li>
-                            <a href="/tree" data-vivaldi-spatnav-clickable="1">tree</a>
-                        </li>
-                        <li>
-                            <a href="/highlight" data-vivaldi-spatnav-clickable="1">highlight</a>
-                        </li>
-                        
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="emulator" data-vivaldi-spatnav-clickable="1" style="" aria-expanded="false">Emulator<span class="caret"></span></a>
-                            <ul class="dropdown-menu" aria-labelledby="emulator">
-                                <li><a href="/emulator">start emulator</a></li>
-                                <li><a href="/reinstall">reinstall apk</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+        <nav>
+            <div class="navbar navbar-default">
+                <div class="container">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="/upload">APK Modify Web</a>
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                    </div>
+
+                    <div class="navbar-collapse collapse" id="navbar-main">
+                        <ul class="nav navbar-nav">
+                            <li>
+                                <a href="/tree">tree</a>
+                            </li>
+                            <li>
+                                <a href="/highlight">highlight</a>
+                            </li>
+
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="emulator">Emulator<span class="caret"></span></a>
+                                <ul class="dropdown-menu" aria-labelledby="emulator">
+                                    <li><a href="/emulator">start emulator</a></li>
+                                    <li><a href="/reinstall">reinstall apk</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>
-        
+
 
         <header>
             {% block header %}{% endblock %}

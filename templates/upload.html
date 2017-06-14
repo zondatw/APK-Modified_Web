@@ -7,22 +7,31 @@
 {% endblock %}
 
 {% block section %}
-    <div id="upload">
-        <form @submit.prevent="submit" class="form-horizontal">
-            <fieldset>
-                <div class="form-group">
-                    <div class="field">
-                        <input type="file" v-model="myFile" name='file' multiple size="50">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-lg-10 col-lg-offset-2">
-                        <button type="submit" class="btn btn-success">upload</button>
-                    </div>
-                </div>
-            </fieldset>
-        </form>
+    
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Upload APK</h3>
+        </div>
+        <div class="panel-body">
+            <div id="upload">
+                <form @submit.prevent="submit" class="form-horizontal">
+                    <fieldset>
+                        <div class="form-group">
+                            <div class="field">
+                                <input type="file" v-model="myFile" name='file' multiple size="50">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-lg-10 col-lg-offset-2">
+                                <button type="submit" class="btn btn-success">upload</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
     </div>
+    
 {% endblock %}
 
 {% block footer %}
