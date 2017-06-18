@@ -7,39 +7,23 @@
 {% endblock %}
 
 {% block section %}
-    <!-- item template -->
-    <script type="text/x-template" id="item-template">
-        <li>
-            <div
-            :class="{bold: isFolder}"
-            @click="toggle"
-            @dblclick="changeType">
-            {{model.name}}
-            <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
+    <div id="file_list">
+        <div class="panel panel-default" style="max-width:300px;">
+            <div class="panel-heading">
+                File List
             </div>
-            <ul v-show="open" v-if="isFolder">
-            <item
-                class="item"
-                v-for="model in model.children"
-                :model="model">
-            </item>
-            <li class="add" @click="addChild">+</li>
+            <div class="panel-body">
+            </div>
+
+            <!-- List group -->
+            <ul class="list-group" style="max-height:300px;overflow-x:hidden;overflow-y:auto;">
+                <button type="button" class="list-group-item" v-for="(data, index) in treeData" v-on:click="getChildren(index)">
+                    {{ data.name }}
+                </button>
             </ul>
-        </li>
-    </script>
-
-    <p>(You can double click on an item to turn it into a folder.)</p>
-
-    <!-- the demo root element -->
-    <div id="tree">
-        <ul>
-            <item
-                class="item"
-                :model="treeData">
-            </item>
-        </ul>
-        <button v-on:click="getTreeData">show</button>
+        <div>
     </div>
+    
 {% endblock %}
 
 {% block footer %}
@@ -47,49 +31,10 @@
 
 {% block script %}
 <script>
-
-    // define the item component
-    Vue.component('item', {
-        template: '#item-template',
-        props: {
-            model: Object
-        },
-        data: function () {
-            return {
-            open: false
-            }
-        },
-        computed: {
-            isFolder: function () {
-            return this.model.children &&
-                this.model.children.length
-            }
-        },
-        methods: {
-            toggle: function () {
-            if (this.isFolder) {
-                this.open = !this.open
-            }
-            },
-            changeType: function () {
-            if (!this.isFolder) {
-                Vue.set(this.model, 'children', [])
-                this.addChild()
-                this.open = true
-            }
-            },
-            addChild: function () {
-            this.model.children.push({
-                name: 'new stuff'
-            })
-            }
-        }
-    })
-
-    // boot up the demo
-    var tree = new Vue({
-        el: '#tree',
+    new Vue({
+        el: '#file_list',
         data: {
+            message: 'Hello Vue!',
             treeData: {},
             apiUrl: '/api/treeData'
         },
@@ -97,12 +42,16 @@
             getTreeData: function () {
                 this.$http.get(this.apiUrl)
                     .then(function (response) {
-                        this.treeData = response.data
+                        this.treeData = response.data.children
                 }, function (err) {
                     console.log(err)
                 })
+            },
+            getChildren: function (index) {
+                this.treeData = this.treeData[index].children
             }
-        }
+        }, 
+        mounted() { this.getTreeData() }
     })
 </script>
 {% endblock %}

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import codecs
 import os
 import subprocess
 from subprocess import PIPE, STDOUT
@@ -27,7 +29,10 @@ app = CustomFlask(__name__)
 #   method
 #--------------------------------------------------------------
 def path_to_dict(path):
-    dict_dir = {'name': os.path.basename(path)}
+    dict_dir = {
+        'name': os.path.basename(path),
+        'path': path
+    }
     if os.path.isdir(path):
         dict_dir.update({
             'type': "directory",
@@ -35,6 +40,11 @@ def path_to_dict(path):
         })
     else:
         dict_dir['type'] = "file"
+        file_content = ''
+        with codecs.open(path, 'r', encoding="iso-8859-15") as f:
+            for line in f:
+                file_content += line
+        dict_dir['content'] = file_content
     return dict_dir
 
 
@@ -225,12 +235,6 @@ def reinstallAPK():
 def index():
     return render_template('index.html')
 
-
-@app.route('/tree')
-def tree():
-    return render_template('tree.html')
-
-
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
@@ -244,16 +248,12 @@ def upload_file():
                     apk_name=flask_config.apk_name)
         f.save(flask_config.apk_file_path)
         unpack_apk()
+        
     return render_template('upload.html')
 
-
-@app.route('/highlight')
-def highlight():
-    return render_template('highlight.html')
-
-@app.route('/test_index')
-def testindex():
-    return render_template('test_index.html')
+@app.route('/modification')
+def modification():
+    return render_template('modification.html')
 
 @app.route('/emulator')
 def emulator():
@@ -265,4 +265,4 @@ def reinstall():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block nav %}
+    <div id="file_list"  class="col-md-4">
+        <div class="panel panel-default" style="max-width:300px;">
+            <div class="panel-heading">
+                File List
+            </div>
+            <div class="panel-body">
+                <button type="button" class="btn btn-primary btn-xs" aria-label="Left Align" @click="getParent">
+                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-success btn-xs" aria-label="Right Align">
+                    <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-danger btn-xs" aria-label="Right Align">
+                    <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                </button>
+            </div>
+
+            <!-- List group -->
+            <ul class="list-group" style="max-height:300px;overflow-x:hidden;overflow-y:auto;">
+                <div v-for="(data, index) in treeData" >
+                    <div v-if="data.type === 'directory'">
+                        <button type="button" class="list-group-item" v-on:click="getChildren(index)">
+                            <span class="glyphicon glyphicon-folder-open" aria-hidden="true"> {{ data.name }}</span>
+                        </button>
+                    </div>
+                    <div v-else-if="data.type === 'file'">
+                        <button type="button" class="list-group-item" v-on:click="getChildren(index)">
+                            {{ data.name }}
+                        </button>
+                    </div>
+                </div>
+            </ul>
+        <div>
+    </div>
+{% endblock %}
+
+{% block section %}
+    <div id="section_nav" class="col-md-8">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a href="#smali" data-toggle="tab">Smali</a>
+            </li>
+            <li>
+                <a href="#java" data-toggle="tab">Java code</a>
+            </li>
+        </ul>
+        <div id="myTabContent" class="tab-content">
+            <div class="tab-pane fade active in" id="smali">
+                <!-- smali -->
+                <div id="code">
+                    <div class="col-md-6">
+                        <p>origin</p>
+                        <div style="height: 400px">
+                            <editor editor-id="origin" :content="content_origin"></editor>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <p>modification</p>
+                        <div style="height: 400px">
+                            <editor editor-id="modification" :content="content_modification" v-on:change-content="changeContent_modification"></editor>
+                        </div>
+                    </div>
+                </div>
+                <!-- smali end -->
+            </div>
+
+            <div class="tab-pane fade" id="java">
+                <p>java code</p>
+            </div>  
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block script %}
+    <script src="../static/js/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+    // file list
+    const file_list = new Vue({
+        el: '#file_list',
+        data: {
+            treeData: [],
+            apiUrl: '/api/treeData'
+        },
+        methods: {
+            getTreeData: function () {
+                this.$http.get(this.apiUrl)
+                    .then(function (response) {
+                        this.treeData = response.data.children
+                }, function (err) {
+                    console.log(err)
+                })
+            },
+            getChildren: function (index) {
+                if (this.treeData[index].type == "directory") {
+                    parent = {
+                        "name": "⇚", 
+                        "type": "parent",
+                        "parent": this.treeData
+                    }
+                    this.treeData = this.treeData[index].children
+                    this.treeData.push(parent)
+                }
+                else if (this.treeData[index].type == "file") {
+                    code.content_origin = this.treeData[index].content
+                    code.content_modification = this.treeData[index].content
+                }
+            },
+            getParent: function () {
+                index = this.treeData.length - 1
+                if (this.treeData[index].type == "parent") {
+                    parent = this.treeData.pop(index)
+                    this.treeData = parent.parent
+                }
+            }
+        }, 
+        mounted() { this.getTreeData() }
+    })
+    /////////////////////////////////////
+
+    // code
+    Vue.component('Editor', {
+        template: '<div :id="editorId" style="width: 100%; height: 100%;"></div>',
+        props: ['editorId', 'content', 'lang', 'theme'],
+        data () {
+            return {
+                editor: Object,
+                beforeContent: ''
+            }
+        },
+        watch: {
+            'content' (value) {
+                if (this.beforeContent !== value) {
+                    this.editor.setValue(value, 1)
+                }
+            }
+        },
+        mounted () {
+                const lang = this.lang || 'javascript'
+                const theme = this.theme || 'monokai'
+            
+                this.editor = window.ace.edit(this.editorId)
+                this.editor.setValue(this.content, 1)
+                
+                this.editor.getSession().setMode(`ace/mode/${lang}`)
+                this.editor.setTheme(`ace/theme/${theme}`)
+
+                this.editor.on('change', () => {
+                    this.beforeContent = this.editor.getValue()
+                    this.$emit('change-content', this.editor.getValue())
+                })
+            }
+        })
+
+
+    const code = new Vue({
+        el: "#code",
+        data () {
+            return {
+                content_origin: '',
+                content_modification: ''
+            }
+        },
+        methods: {
+            changeContent_modification (val) {
+                if (this.content_modification !== val) {
+                    this.content_modification = val
+                }
+            }
+        }
+    })
+    ////////////////////////////////////////
+    </script>
+{% endblock %}
