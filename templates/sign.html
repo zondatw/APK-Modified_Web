@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#exists_sign" data-toggle="tab">Exists Sign</a></li>
+        <li><a href="#new_sign" data-toggle="tab">New Sign</a></li>
+    </ul>
+    <div id="signTabContent" class="tab-content">
+        <div class="tab-pane fade active in" id="exists_sign">
+            <form @submit.prevent="exists_sign_submit" class="form-horizontal">
+                <fieldset>
+                    <div class="form-group">
+                        <label for="inputStorepass" class="col-lg-2 control-label">Storepass</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputStorepass" name='storepass' placeholder="Storepass">
+                        </div>
+
+                        <label for="inputAlias" class="col-lg-2 control-label">Alias</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputAlias" name='alias' placeholder="Alias">
+                        </div>
+                        
+                        <label for="inputAlias" class="col-lg-2 control-label">Sign File</label>
+                        <div class="field">
+                            <input type="file" v-model="myFile" name='file' multiple size="50">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-10 col-lg-offset-2">
+                            <button type="reset" class="btn btn-default">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div class="tab-pane fade" id="new_sign">
+        </div>
+    </div>
+
+
+    
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block script %}
+    <script>
+       new Vue({
+            el: '#signTabContent',
+            data: {
+                apiUrl_exists_sign: '/api/upload_exists_sign',
+                redirectURL: '/modification'
+            },
+            methods: {
+                exists_sign_submit: function(event) {
+                    // FormData支援把 Form 元素丟進去
+                    var formData = new FormData(event.target)
+                    console.log(formData)
+                    this.$http.post(this.apiUrl_exists_sign, formData)
+                        .then(function (response) {
+                            //window.location.href = this.redirectURL;
+                    }, function (err) {
+                        alert('Sign Error')
+                        console.log(err)
+                    })
+
+                }
+            }
+
+        })
+    </script>
+{% endblock %}

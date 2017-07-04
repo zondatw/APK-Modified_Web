@@ -10,14 +10,19 @@
                 File List
             </div>
             <div class="panel-body">
-                <button type="button" class="btn btn-primary btn-xs" aria-label="Left Align" @click="getParent">
-                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                <!-- left button -->
+                <button type="button" class="btn btn-primary btn-xs" aria-label="Preceding Layer" @click="getParent">
+                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="True"></span>
                 </button>
-                <button type="button" class="btn btn-success btn-xs" aria-label="Right Align">
-                    <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="true"></span>
+                <button type="button" class="btn btn-success btn-xs" aria-label="Add">
+                    <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="True"></span>
                 </button>
-                <button type="button" class="btn btn-danger btn-xs" aria-label="Right Align">
-                    <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                <button type="button" class="btn btn-danger btn-xs" aria-label="Remove">
+                    <span class="glyphicon glyphicon-minus" aria-hidden="True"></span>
+                </button>
+                <!-- right button -->
+                <button type="button" class="pull-right btn btn-success btn-xs" aria-label="Save This"  @click="save_file">
+                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="True"></span>
                 </button>
             </div>
 
@@ -36,6 +41,7 @@
                     </div>
                 </div>
             </ul>
+            <!-- List group end -->
         <div>
     </div>
 {% endblock %}
@@ -89,13 +95,15 @@
         el: '#file_list',
         data: {
             treeData: [],
-            apiUrl: '/api/treeData'
+            current_file_object: null,
+            apiUrl_tree_data: '/api/treeData',
+            apiUrl_save_file: '/api/save_file'
         },
         methods: {
             getTreeData: function () {
-                this.$http.get(this.apiUrl)
+                this.$http.get(this.apiUrl_tree_data)
                     .then(function (response) {
-                        this.treeData = response.data.children
+                    this.treeData = response.data.children
                 }, function (err) {
                     console.log(err)
                 })
@@ -109,10 +117,12 @@
                     }
                     this.treeData = this.treeData[index].children
                     this.treeData.push(parent)
+                    this.initCurrentFileObject()
                 }
                 else if (this.treeData[index].type == "file") {
-                    code.content_origin = this.treeData[index].content
-                    code.content_modification = this.treeData[index].content
+                    this.current_file_object = this.treeData[index]
+                    code.content_origin = this.current_file_object.content
+                    code.content_modification = this.current_file_object.modification_content
                 }
             },
             getParent: function () {
@@ -120,7 +130,24 @@
                 if (this.treeData[index].type == "parent") {
                     parent = this.treeData.pop(index)
                     this.treeData = parent.parent
+                    this.initCurrentFileObject()
                 }
+            },
+            initCurrentFileObject: function() {
+                this.current_file_object = null
+                code.content_origin = ''
+                code.content_modification = ''
+            },
+            save_file: function() {
+                this.$http.put(this.apiUrl_save_file, this.current_file_object, 
+                    {headers: {'Content-Type':'application/json; charset=UTF-8'}})
+                    .then(function () {
+                    this.current_file_object.content = this.current_file_object.modification_content
+                    code.content_origin = this.current_file_object.content
+                    code.content_modification = this.current_file_object.modification_content
+                }, function (err) {
+                    console.log(err)
+                })
             }
         }, 
         mounted() { this.getTreeData() }
@@ -174,6 +201,7 @@
             changeContent_modification (val) {
                 if (this.content_modification !== val) {
                     this.content_modification = val
+                    file_list.current_file_object.modification_content = val
                 }
             }
         }

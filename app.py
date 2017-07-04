@@ -29,6 +29,25 @@ app = CustomFlask(__name__)
 #   method
 #--------------------------------------------------------------
 def path_to_dict(path):
+    '''
+        get file tree
+
+        directory:
+            {
+                name: (str),
+                path: (str),
+                type: directory,
+                children: (list)
+            }
+        file:
+            {
+                name: (str),
+                path: (str),
+                type: file,
+                content: (str),
+                modification_content: (str)
+            }
+    '''
     dict_dir = {
         'name': os.path.basename(path),
         'path': path
@@ -43,12 +62,16 @@ def path_to_dict(path):
         file_content = ''
         with codecs.open(path, 'r', encoding="iso-8859-15") as f:
             for line in f:
-                file_content += line
+                file_content += line.rstrip() + '\n'
         dict_dir['content'] = file_content
+        dict_dir['modification_content'] = file_content
     return dict_dir
 
 
-def apk_build_and_sign(dict_data):
+def build_apk():
+    '''
+        build new apk file
+    '''
     apktool_format = "\"{apktool_path}\" b {apk_file_path}" \
         .format(apktool_path=flask_config.apktool_path, 
                 apk_file_path=flask_config.apk_file_path)
@@ -62,8 +85,8 @@ def apk_build_and_sign(dict_data):
         .format(unpack_dir_path=flask_config.unpack_dir_path, 
                 apk_name=flask_config.apk_name)
 
-
-    if dict_data['creat_sign_flag']:
+def create_sign(dict_sign_data):
+    if dict_sign_data['creat_sign_flag']:
         print("Input keytool information:")
         keystore_path = input("keystore path: ")
         alias = input("alias: ")
@@ -81,18 +104,18 @@ def apk_build_and_sign(dict_data):
             "-keystore {keystore_path} -alias {alias} -keypass {keypass} -storepass {storepass}") \
             .format(java_path=flask_config.java_path,
                     keystore_path=flask_config.keystore_path,
-                    alias=dict_data['alias'],
-                    keypass=dict_data['keypass'],
-                    storepass=dict_data['storepass'])
+                    alias=dict_sign_data['alias'],
+                    keypass=dict_sign_data['keypass'],
+                    storepass=dict_sign_data['storepass'])
 
         keytool_sign_info_format = \
             "{common_name}\n{organization_unit}\n{organization_name}\n{locality_name}\n{state_name}\n{country}\ny\n" \
-            .format(common_name=dict_data['common_name'],
-                    organization_unit=dict_data['organization_unit'],
-                    organization_name=dict_data['organization_name'],
-                    locality_name=dict_data['locality_name'],
-                    state_name=dict_data['state_name'],
-                    country=dict_data['country'])
+            .format(common_name=dict_sign_data['common_name'],
+                    organization_unit=dict_sign_data['organization_unit'],
+                    organization_name=dict_sign_data['organization_name'],
+                    locality_name=dict_sign_data['locality_name'],
+                    state_name=dict_sign_data['state_name'],
+                    country=dict_sign_data['country'])
         
         p = subprocess.Popen(keytool_format, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         
@@ -102,16 +125,17 @@ def apk_build_and_sign(dict_data):
             return False
         else:
             print("create sign success!")
-        
-        
+
+
+def sign_apk(dict_sign_data):
     jarsigner_format = \
         ("\"{java_path}\jarsigner\" -tsa http://timestamp.digicert.com -verbose -sigalg SHA1withDSA -digestalg SHA1 " + \
         "-keystore {keystore_path} -storepass {storepass} \"{apk_file_path}\" {alias}") \
         .format(java_path=flask_config.java_path,
                 keystore_path=flask_config.keystore_path,
-                storepass=dict_data['storepass'],
+                storepass=flask_config.sign_storepass,
                 apk_file_path=flask_config.new_apk_file_path,
-                alias=dict_data['alias'])
+                alias=flask_config.sign_alias)
                 
     p = subprocess.Popen(jarsigner_format, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
     out = p.communicate()[0]
@@ -211,7 +235,7 @@ def getStartEmulatorDevices():
 
 @app.route('/api/reinstallAPK', methods=['PUT'])
 def reinstallAPK():
-    device = str(request.data,'utf-8')
+    device = str(request.data, 'utf-8')
     uninstall_format = "\"{adb_path}\" -s {device} uninstall {package_name}" \
         .format(adb_path=flask_config.adb_path, 
                 device=device, 
@@ -228,6 +252,24 @@ def reinstallAPK():
     return jsonify()
 
 
+@app.route('/api/save_file', methods=['PUT'])
+def save_file():
+    dict_file = request.get_json()
+    with open(dict_file['path'], 'w') as f:
+        f.write(dict_file['modification_content'])
+    return jsonify()
+
+
+@app.route('/api/upload_exists_sign', methods=['POST'])
+def upload_exists_sign():
+    flask_config.sign_storepass = request.form['storepass']
+    flask_config.sign_alias = request.form['alias']
+    f = request.files.get('file')
+    print(flask_config.sign_storepass)
+    print(flask_config.sign_alias)
+    return jsonify()
+
+
 #--------------------------------------------------------------
 #   route
 #--------------------------------------------------------------
@@ -237,7 +279,9 @@ def index():
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        return render_template('upload.html')
+    elif request.method == 'POST':
         f = request.files.get('file')
         flask_config.apk_name = (f.filename).split('.apk')[0]
         flask_config.apk_file_path = '{apk_file_dir}\{filename}' \
@@ -248,12 +292,15 @@ def upload_file():
                     apk_name=flask_config.apk_name)
         f.save(flask_config.apk_file_path)
         unpack_apk()
-        
-    return render_template('upload.html')
+
 
 @app.route('/modification')
 def modification():
     return render_template('modification.html')
+
+@app.route('/sign')
+def sign():
+    return render_template('sign.html')
 
 @app.route('/emulator')
 def emulator():
