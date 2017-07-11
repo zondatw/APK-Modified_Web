@@ -2,6 +2,7 @@
 import codecs
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 from subprocess import PIPE, STDOUT
 
 from flask import Flask
@@ -72,21 +73,22 @@ def build_apk():
     '''
         build new apk file
     '''
-    apktool_format = "\"{apktool_path}\" b {apk_file_path}" \
+    apktool_format = "\"{apktool_path}\" b {unpack_dir_path}" \
         .format(apktool_path=flask_config.apktool_path, 
-                apk_file_path=flask_config.apk_file_path)
+                unpack_dir_path=flask_config.unpack_dir_path)
 
     ret_mes = str(subprocess.check_output(apktool_format, shell=True))
     if 'ERROR' in ret_mes:
         print("Error", ret_mes)
         return False
 
-    flask_config.new_apk_file_path = "{unpack_dir_path}\dist\{apk_name}" \
+    flask_config.new_apk_file_path = "{unpack_dir_path}\dist\{apk_name}.apk" \
         .format(unpack_dir_path=flask_config.unpack_dir_path, 
                 apk_name=flask_config.apk_name)
 
 def create_sign(dict_sign_data):
     if dict_sign_data['creat_sign_flag']:
+        '''
         print("Input keytool information:")
         keystore_path = input("keystore path: ")
         alias = input("alias: ")
@@ -98,7 +100,7 @@ def create_sign(dict_sign_data):
         locality_name = input("locality name: ")
         state_name = input("state name: ")
         country = input("country: ")
-        
+        '''
         keytool_format = \
             ("\"{java_path}\keytool\" -genkey -v -keyalg DSA -keysize 1024 -sigalg SHA1withDSA -validity 20000 " + \
             "-keystore {keystore_path} -alias {alias} -keypass {keypass} -storepass {storepass}") \
@@ -127,7 +129,7 @@ def create_sign(dict_sign_data):
             print("create sign success!")
 
 
-def sign_apk(dict_sign_data):
+def sign_apk():
     jarsigner_format = \
         ("\"{java_path}\jarsigner\" -tsa http://timestamp.digicert.com -verbose -sigalg SHA1withDSA -digestalg SHA1 " + \
         "-keystore {keystore_path} -storepass {storepass} \"{apk_file_path}\" {alias}") \
@@ -141,6 +143,7 @@ def sign_apk(dict_sign_data):
     out = p.communicate()[0]
     if 'jar signed' in str(out):
         print("Success!")
+        return True
     else:
         print("Error", out.decode('UTF-8', 'strict'))
         return False
@@ -175,6 +178,11 @@ def unpack_apk():
     ret_mes = str(subprocess.check_output(dex2jar_path_format, shell=True))
     return True
 
+
+def read_package_name():
+    tree = ET.parse(flask_config.android_manifest_xml_path)
+    root = tree.getroot()
+    flask_config.package_name = root.attrib['package']
 
 #--------------------------------------------------------------
 #   api
@@ -265,8 +273,14 @@ def upload_exists_sign():
     flask_config.sign_storepass = request.form['storepass']
     flask_config.sign_alias = request.form['alias']
     f = request.files.get('file')
-    print(flask_config.sign_storepass)
-    print(flask_config.sign_alias)
+    f.save(flask_config.keystore_path)
+    return jsonify()
+
+
+@app.route('/api/build_and_sign_apk', methods=['POST'])
+def build_and_sign_apk():
+    build_apk()
+    sign_apk()
     return jsonify()
 
 
@@ -290,8 +304,12 @@ def upload_file():
         flask_config.unpack_dir_path = '{apk_file_dir}\{apk_name}' \
             .format(apk_file_dir=flask_config.apk_file_dir,
                     apk_name=flask_config.apk_name)
+        flask_config.android_manifest_xml_path = '{unpack_dir_path}\AndroidManifest.xml' \
+            .format(unpack_dir_path=flask_config.unpack_dir_path)
         f.save(flask_config.apk_file_path)
         unpack_apk()
+        read_package_name()
+        return jsonify()
 
 
 @app.route('/modification')
@@ -301,6 +319,10 @@ def modification():
 @app.route('/sign')
 def sign():
     return render_template('sign.html')
+
+@app.route('/build')
+def build():
+    return render_template('build.html')
 
 @app.route('/emulator')
 def emulator():

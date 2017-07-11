@@ -21,7 +21,7 @@
             <div class="navbar navbar-default">
                 <div class="container">
                     <div class="navbar-header">
-                        <a class="navbar-brand" @click="goUpload">APK Modify Web</a>
+                        <a class="navbar-brand" @click="goHome">APK Modify Web</a>
                         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -32,10 +32,16 @@
                     <div class="navbar-collapse collapse" id="navbar-main">
                         <ul class="nav navbar-nav">
                             <li>
-                                <a @click="goModification">modification</a>
+                                <a @click="goUpload">Upload</a>
                             </li>
                             <li>
-                                <a @click="goSign">sign</a>
+                                <a @click="goModification">Modification</a>
+                            </li>
+                            <li>
+                                <a @click="goSign">Sign</a>
+                            </li>
+                            <li>
+                                <a @click="goBuild">Build</a>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="emulator">Emulator<span class="caret"></span></a>
@@ -75,6 +81,7 @@
         var main_nav = new Vue({
             el: '#main_nav',
             data: {
+                redirectURL_indx: '/',
                 redirectURL_uplaod: '/upload',
                 redirectURL_modification: '/modification',
                 redirectURL_sign: '/sign',
@@ -82,6 +89,9 @@
                 redirectURL_reinstall: '/reinstall',
             },
             methods: {
+                goHome: function () {
+                    window.location.href = this.redirectURL_indx;
+                },
                 goUpload: function () {
                     window.location.href = this.redirectURL_uplaod;
                 },

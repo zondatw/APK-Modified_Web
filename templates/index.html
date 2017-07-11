@@ -1,18 +1,15 @@
 {% extends "layout.html" %}
 
 {% block header %}
-    <div>
-        header
-    </div>
 {% endblock %}
 
 {% block nav %}
 {% endblock %}
 
 {% block section %}
-    <div id="example">
-        <p>Original message: "{{ message }}"</p>
-        <p>Computed reversed message: "{{ now }}"</p>
+    <div id="index">
+        <p>Hello, I'm zonda</p>
+        <p>Welcome to APK Modify WEB</p>
     </div>
 {% endblock %}
 
@@ -20,17 +17,4 @@
 {% endblock %}
 
 {% block script %}
-    <script>
-        var vm = new Vue({
-            el: '#example',
-            data: {
-                message: 'Hello'
-            },
-            methods: {
-                now: function () {
-                    return Date.now()
-                }
-            }
-        })
-    </script>
 {% endblock %}

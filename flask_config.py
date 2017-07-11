@@ -11,9 +11,10 @@ apk_file_path = None
 apk_name = None
 unpack_dir_path = None
 new_apk_file_path = None
+android_manifest_xml_path = None
 package_name = None
 
-keystore_path = r'tmp\sing\sign.keystore'
+keystore_path = r'tmp\sign\sign.keystore'
 sign_storepass = ''
 sign_alias = ''
 
