@@ -85,6 +85,7 @@
                 redirectURL_uplaod: '/upload',
                 redirectURL_modification: '/modification',
                 redirectURL_sign: '/sign',
+                redirectURL_build: '/build',
                 redirectURL_emulator: '/emulator',
                 redirectURL_reinstall: '/reinstall',
             },
@@ -100,6 +101,9 @@
                 },
                 goSign: function () {
                     window.location.href = this.redirectURL_sign;
+                },
+                goBuild: function () {
+                    window.location.href = this.redirectURL_build;
                 },
                 goEmulator: function () {
                     window.location.href = this.redirectURL_emulator;

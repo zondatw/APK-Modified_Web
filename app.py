@@ -3,6 +3,7 @@ import codecs
 import os
 import subprocess
 import xml.etree.ElementTree as ET
+from multiprocessing import Process
 from subprocess import PIPE, STDOUT
 
 from flask import Flask
@@ -184,6 +185,14 @@ def read_package_name():
     root = tree.getroot()
     flask_config.package_name = root.attrib['package']
 
+
+def start_emulator_device(device):
+    open_emulator_format = "\"{emulator_path}\" -avd {device} -netdelay none -netspeed full" \
+	    .format(emulator_path=flask_config.emulator_path, 
+                device=device)
+    subprocess.Popen(open_emulator_format, shell=True,
+             stdin=None, stdout=None, stderr=None, close_fds=True)
+
 #--------------------------------------------------------------
 #   api
 #--------------------------------------------------------------
@@ -213,10 +222,8 @@ def getEmulatorDevices():
 @app.route('/api/startEmulatorDevices', methods=['POST'])
 def startEmulatorDevices():
     device = str(request.data,'utf-8')
-    open_emulator_format = "\"{emulator_path}\" -avd {device} -netdelay none -netspeed full" \
-	    .format(emulator_path=flask_config.emulator_path, 
-                device=device)
-    ret_mes = subprocess.check_output(open_emulator_format, shell=True)
+    p = Process(target=start_emulator_device(device))
+    p.start()
     return jsonify()
 
 
@@ -255,6 +262,7 @@ def reinstallAPK():
         .format(adb_path=flask_config.adb_path, 
                 device=device, 
                 apk_file_path=flask_config.new_apk_file_path)
+    print(flask_config.new_apk_file_path)
     ret_mes = subprocess.check_output(install_format, shell=True)
     print(ret_mes.decode('utf-8'))
     return jsonify()
