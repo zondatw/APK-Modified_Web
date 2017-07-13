@@ -10,6 +10,7 @@ apk_file_dir = r'tmp\apk'
 apk_file_path = None
 apk_name = None
 unpack_dir_path = None
+classes_dir_path = r'tmp\classes'
 new_apk_file_path = None
 android_manifest_xml_path = None
 package_name = None

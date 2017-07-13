@@ -50,15 +50,12 @@
     <div id="section_nav" class="col-md-8">
         <ul class="nav nav-tabs">
             <li class="active">
-                <a href="#smali" data-toggle="tab">Smali</a>
-            </li>
-            <li>
-                <a href="#java" data-toggle="tab">Java code</a>
+                <a href="#code" data-toggle="tab">Code</a>
             </li>
         </ul>
         <div id="myTabContent" class="tab-content">
-            <div class="tab-pane fade active in" id="smali">
-                <!-- smali -->
+            <div class="tab-pane fade active in" id="code">
+                <!-- code -->
                 <div id="code">
                     <div class="col-md-6">
                         <p>origin</p>
@@ -74,12 +71,8 @@
                         </div>
                     </div>
                 </div>
-                <!-- smali end -->
+                <!-- code end -->
             </div>
-
-            <div class="tab-pane fade" id="java">
-                <p>java code</p>
-            </div>  
         </div>
     </div>
 {% endblock %}
@@ -145,6 +138,7 @@
                     this.current_file_object.content = this.current_file_object.modification_content
                     code.content_origin = this.current_file_object.content
                     code.content_modification = this.current_file_object.modification_content
+                    alert("Save success!!")
                 }, function (err) {
                     console.log(err)
                 })
@@ -172,7 +166,7 @@
             }
         },
         mounted () {
-                const lang = this.lang || 'javascript'
+                const lang = this.lang || 'text'
                 const theme = this.theme || 'monokai'
             
                 this.editor = window.ace.edit(this.editorId)

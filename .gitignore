@@ -3,4 +3,5 @@ __pycache__
 venv
 
 tmp/apk/*
+tmp/classes/*
 tmp/sign/*

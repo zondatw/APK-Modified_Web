@@ -51,6 +51,7 @@
                     if (device != '') {
                         this.$http.put(this.apiUrl2, device) 
                             .then(function (response) {
+                            alert("Reinstall success!!")
                         }, function (err) {
                             console.log(err)
                         })
