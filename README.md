@@ -1,7 +1,7 @@
 # apk modify web
 
 ## 目的
-以瀏覽器顯示的修改apk工具  
+Web顯示的修改apk工具，之所以會用Web顯示，是為了讓所有裝置都能使用，此工具會有RWD，所以開起來後，可以用平板和手機使用此工具喔！  
 
 ## 目前畫面
 index  
@@ -36,3 +36,4 @@ upload -> (modification ->) sign -> build -> emulator
 4. 讓網頁有常用的adb功能，例如： 上傳下載檔案  
 5. 修改xml時，能有即時的畫面顯示  
 6. 新增、刪除檔案  
+7. 新增Linux版本  
