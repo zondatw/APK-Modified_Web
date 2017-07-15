@@ -8,23 +8,17 @@
 
 {% block section %}
     
-    <div id="upload_apk" class="panel panel-info", style="max-width: 300px; margin: 0 auto; ">
-        <div class="panel-heading">
-            <h3 class="panel-title">Upload APK</h3>
-        </div>
-        <div class="panel-body">
-            <div id="upload">
-                <form @submit.prevent="submit" class="form-horizontal">
-                    <fieldset>
-                        <div class="field">
-                            <input type="file" v-model="myFile" name='file' multiple size="50" style="margin: 0 auto; " >
-                        </div>
-                        <div class="col-lg-10 col-lg-offset-2">
-                            <button type="submit" class="btn btn-success" style="margin: 0 auto; ">upload</button>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
+    <div id="upload_apk" class="jumbotron", style="max-width: 300px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
+        <h2>Upload APK</h2>
+        <div id="upload">
+            <form @submit.prevent="submit" class="form-horizontal">
+                <fieldset>
+                    <div class="field">
+                        <input type="file" v-model="myFile" name='file' multiple size="50" style="margin: 0 auto; " >
+                    </div>
+                    <button type="submit" class="btn btn-success" style="margin: 0 auto; ">upload</button>
+                </fieldset>
+            </form>
         </div>
     </div>
     

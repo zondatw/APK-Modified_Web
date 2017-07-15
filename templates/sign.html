@@ -7,11 +7,11 @@
 {% endblock %}
 
 {% block section %}
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs", style="max-width: 500px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
         <li class="active"><a href="#exists_sign" data-toggle="tab">Exists Sign</a></li>
         <li><a href="#new_sign" data-toggle="tab">New Sign</a></li>
     </ul>
-    <div id="signTabContent" class="tab-content">
+    <div id="signTabContent" class="tab-content" , style="max-width: 500px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
         <div class="tab-pane fade active in" id="exists_sign">
             <form @submit.prevent="exists_sign_submit" class="form-horizontal">
                 <fieldset>

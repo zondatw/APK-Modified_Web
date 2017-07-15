@@ -7,20 +7,27 @@
 {% endblock %}
 
 {% block section %}
-    <div id="start_emulator_list">
-        <p>
-            <select v-model="selected">
-                <option v-for="option in options" v-bind:device="option.device">
-                    {{ option.device }}
-                </option>
-            </select>
-        </p>
-        <p>
-            <span>Selected: {{ selected }}</span>
-        </p>
-        <p>
-            <button v-on:click="reinstallAPK">reinstall</button>
-        </p>
+    <div id="reinstall" class="jumbotron", style="max-width: 500px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
+        <h2>Reinstall APK</h2>
+        <form @submit.prevent="submit" class="form-horizontal">
+            <fieldset>
+                <div id="start_emulator_list" class="form-group">
+                    <p>
+                        <select class="form-control" v-model="selected">
+                            <option v-for="option in options" v-bind:device="option.device">
+                                {{ option.device }}
+                            </option>
+                        </select>
+                    </p>
+                    <p>
+                        <span>Selected: {{ selected }}</span>
+                    </p>
+                    <p>
+                        <button  class="btn btn-success" v-on:click="reinstallAPK">reinstall</button>
+                    </p>
+                </div>
+            </fieldset>
+        </form>
     </div>
 {% endblock %}
 

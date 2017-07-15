@@ -7,24 +7,16 @@
 {% endblock %}
 
 {% block section %}
-    
-    <div id="build_apk" class="panel panel-info", style="max-width: 300px; margin: 0 auto; ">
-        <div class="panel-heading">
-            <h3 class="panel-title">Build APK</h3>
-        </div>
-        <div class="panel-body">
-            <div id="build">
-                <form @submit.prevent="submit" class="form-horizontal">
-                    <fieldset>
-                        <div class="col-lg-10 col-lg-offset-2">
-                            <button type="submit" class="btn btn-success" style="margin: 0 auto; ">Build</button>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
+    <div id="build_apk" class="jumbotron", style="max-width: 300px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
+        <h2>Build APK</h2>
+        <div id="build">
+            <form @submit.prevent="submit" class="form-horizontal">
+                <fieldset>
+                    <button type="submit" class="btn btn-success" style="margin: 0 auto; ">Build</button>
+                </fieldset>
+            </form>
         </div>
     </div>
-    
 {% endblock %}
 
 {% block footer %}
