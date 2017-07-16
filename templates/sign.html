@@ -28,7 +28,7 @@
                         
                         <label for="inputAlias" class="col-lg-2 control-label">Sign File</label>
                         <div class="field">
-                            <input type="file" v-model="myFile" name='file' multiple size="50">
+                            <input type="file" name='file' multiple size="50">
                         </div>
                     </div>
                     <div class="form-group">
@@ -41,6 +41,63 @@
             </form>
         </div>
         <div class="tab-pane fade" id="new_sign">
+            <form @submit.prevent="new_sign_submit" class="form-horizontal">
+                <fieldset>
+                    <div class="form-group">
+                        <label for="inputStorepass" class="col-lg-2 control-label">Storepass</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputStorepass" name='storepass' placeholder="Storepass">
+                        </div>
+
+                        <label for="inputAlias" class="col-lg-2 control-label">Alias</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputAlias" name='alias' placeholder="Alias">
+                        </div>
+
+                        <label for="inputKeypass" class="col-lg-2 control-label">Keypass</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputKeypass" name='keypass' placeholder="Keypass">
+                        </div>
+
+
+                        <label for="inputCommon_name" class="col-lg-2 control-label">Common Name</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputCommon_name" name='common_name' placeholder="Common Name">
+                        </div>
+
+                        <label for="inputOrganization_unit" class="col-lg-2 control-label">Organization Unit</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputOrganization_unit" name='organization_unit' placeholder="Organization Unit">
+                        </div>
+
+                        <label for="inputOrganization_name" class="col-lg-2 control-label">Organization Name</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputOrganization_name" name='organization_name' placeholder="Organization Name">
+                        </div>
+
+                        <label for="inputLocality_name" class="col-lg-2 control-label">Locality Name</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputLocality_name" name='locality_name' placeholder="Locality Name">
+                        </div>
+
+                        <label for="inputState_name" class="col-lg-2 control-label">State Name</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputState_name" name='state_name' placeholder="State Name">
+                        </div>
+
+                        <label for="inputCountry" class="col-lg-2 control-label">Country</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="inputCountry" name='country' placeholder="Country">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-10 col-lg-offset-2">
+                            <button type="reset" class="btn btn-default">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
         </div>
     </div>
 
@@ -51,10 +108,13 @@
 {% block footer %}
 {% endblock %}
 
+{% block template %}
+{% endblock %}
+
 {% block script %}
     <script>
        new Vue({
-            el: '#signTabContent',
+            el: '#exists_sign',
             data: {
                 apiUrl_exists_sign: '/api/upload_exists_sign',
                 redirectURL: '/build'
@@ -71,7 +131,28 @@
                         alert('Sign Error')
                         console.log(err)
                     })
+                }
+            }
+        })
 
+        new Vue({
+            el: '#new_sign',
+            data: {
+                apiUrl_new_sign: '/api/new_sign',
+                redirectURL: '/build'
+            },
+            methods: {
+                new_sign_submit: function(event) {
+                    // FormData支援把 Form 元素丟進去
+                    var formData = new FormData(event.target)
+                    console.log(formData)
+                    this.$http.post(this.apiUrl_new_sign, formData)
+                        .then(function (response) {
+                            window.location.href = this.redirectURL;
+                    }, function (err) {
+                        alert('Sign Error')
+                        console.log(err)
+                    })
                 }
             }
 

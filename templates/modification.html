@@ -1,6 +1,34 @@
 {% extends "layout.html" %}
 
 {% block header %}
+<style>
+    .modal-mask {
+        position: fixed;
+        z-index: 9998;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.33);
+        display: table;
+        transition: opacity .3s ease;
+    }
+
+    .modal-wrapper {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-container {
+        max-width: 500px;
+        margin: 0px auto;
+        background-color: #222222;
+        padding: 20px 30px;
+        border-radius: 2px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        transition: all .3s ease;
+    }
+</style>
 {% endblock %}
 
 {% block nav %}
@@ -14,14 +42,19 @@
                 <button type="button" class="btn btn-primary btn-xs" aria-label="Preceding Layer" @click="getParent">
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="True"></span>
                 </button>
-                <button type="button" class="btn btn-success btn-xs" aria-label="Add">
+                
+                <button type="button" class="btn btn-success btn-xs" aria-label="Add" @click="showAddModal = true">
                     <span class="glyphicon glyphicon glyphicon-plus" aria-hidden="True"></span>
                 </button>
-                <button type="button" class="btn btn-danger btn-xs" aria-label="Remove">
+                <modal_add id="add_file" v-if="showAddModal" @close="showAddModal = false"></modal_add>
+               
+                <button type="button" class="btn btn-danger btn-xs" aria-label="Remove" @click="showRemoveModal = true">
                     <span class="glyphicon glyphicon-minus" aria-hidden="True"></span>
                 </button>
+                <modal_remove id="add_file" v-if="showRemoveModal" @close="showRemoveModal = false"></modal_remove>
+
                 <!-- right button -->
-                <button type="button" class="pull-right btn btn-success btn-xs" aria-label="Save This"  @click="save_file">
+                <button type="button" class="pull-right btn btn-success btn-xs" aria-label="Save This"  @click="SaveFile">
                     <span class="glyphicon glyphicon-floppy-disk" aria-hidden="True"></span>
                 </button>
             </div>
@@ -58,14 +91,14 @@
                 <!-- code -->
                 <div id="code">
                     <div class="col-md-6">
-                        <p>origin</p>
+                        <p>Origin</p>
                         <div style="height: 400px">
                             <editor editor-id="origin" :content="content_origin"></editor>
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <p>modification</p>
+                        <p>Modification</p>
                         <div style="height: 400px">
                             <editor editor-id="modification" :content="content_modification" v-on:change-content="changeContent_modification"></editor>
                         </div>
@@ -80,22 +113,144 @@
 {% block footer %}
 {% endblock %}
 
+{% block template %}
+    <!-- template for the modal of add file -->
+    <script type="text/x-template" id="modal_add_file-template">
+        <transition name="modal">
+            <div class="modal-mask">
+                <div class="modal-wrapper">
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <button type="button" class="close" @click="$emit('close')">&times;</button>
+                            <h4 class="modal-title">Add File</h4>
+                        </div>
+                    
+                        <form @submit.prevent="submit_add_file" class="form-horizontal">
+                            <div class="modal-body">
+                                <fieldset>
+                                    <label for="inputFile_name" class="col-lg-2 control-label">File Name</label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="inputFile_name" name='file_name' placeholder="File Name">
+                                    </div>
+
+                                    <label for="textArea" class="col-lg-2 control-label">File Content</label>
+                                    <div class="col-lg-10">
+                                        <textarea class="form-control" rows="3" id="textArea" name='file_content' placeholder="File Content"></textarea>
+                                        <span class="help-block"></span>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" @click="$emit('close')">Close</button>
+                                <button type="submit" class="btn btn-primary" @click="$emit('close')">Add File</button>
+                            </div>
+                        </form>
+                    
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </script>
+
+    <!-- template for the modal remove file -->
+    <script type="text/x-template" id="modal_remove_file-template">
+        <transition name="modal">
+            <div class="modal-mask">
+                <div class="modal-wrapper">
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <button type="button" class="close" @click="$emit('close')">&times;</button>
+                            <h4 class="modal-title">Remove File</h4>
+                        </div>
+
+                        <div class="modal-body">
+                                Are you sure delete {{file_name}} ?
+                        </div>
+                    
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" @click="$emit('close')">Close</button>
+                            <button type="submit" class="btn btn-primary" @click="submit_remove_file(); $emit('close')">Remove File</button>
+                        </div>
+                    
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </script>
+{% endblock %}
+
 {% block script %}
     <script src="../static/js/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
+    // modal add
+    Vue.component('modal_add', {
+        template: '#modal_add_file-template',
+        data: function() {
+            return {apiUrl_add_file: '/api/add_file'}
+        },
+        methods: {
+            submit_add_file: function() {
+                // FormData支援把 Form 元素丟進去
+                var formData = new FormData(event.target)
+                var dir_path = file_list.dir_path
+                formData.append("dir_path", dir_path)
+                this.$http.post(this.apiUrl_add_file, formData)
+                    .then(function (response) {
+                        alert("Add file success!")
+                        file_list.AddObjToTreeData(response.data)
+                }, function (err) {
+                    alert('Add file Error')
+                    console.log(err)
+                })
+            }
+        },
+    })
+    /////////////////////////////////////
+
+    // modal add
+    Vue.component('modal_remove', {
+        template: '#modal_remove_file-template',
+        data: function() {
+            return {
+                file_name: file_list.current_file_object.name,
+                apiUrl_remove_file: '/api/remove_file'
+            }
+        },
+        methods: {
+            submit_remove_file: function() {
+                console.log("haaaaaaaaaaaa")
+                this.$http.put(this.apiUrl_remove_file, file_list.current_file_object,
+                    {headers: {'Content-Type':'application/json; charset=UTF-8'}})
+                    .then(function (response) {
+                        alert("remove file success!")
+                        file_list.RemoveObjOfTreeData(file_list.current_file_object)
+                }, function (err) {
+                    alert('remove file Error')
+                    console.log(err)
+                })
+            }
+        },
+    })
+    /////////////////////////////////////
+
     // file list
     const file_list = new Vue({
         el: '#file_list',
         data: {
+            dir_path: "",
             treeData: [],
             current_file_object: null,
             apiUrl_tree_data: '/api/treeData',
-            apiUrl_save_file: '/api/save_file'
+            apiUrl_save_file: '/api/save_file',
+            showAddModal: false,
+            showRemoveModal: false
         },
         methods: {
             getTreeData: function () {
                 this.$http.get(this.apiUrl_tree_data)
                     .then(function (response) {
+                    this.dir_path = response.data.path
                     this.treeData = response.data.children
                 }, function (err) {
                     console.log(err)
@@ -106,22 +261,24 @@
                     parent = {
                         "name": "⇚", 
                         "type": "parent",
-                        "parent": this.treeData
+                        "parent": this.treeData,
+                        "dir_path": this.dir_path
                     }
+                    this.dir_path = this.treeData[index].path
                     this.treeData = this.treeData[index].children
                     this.treeData.push(parent)
                     this.initCurrentFileObject()
                 }
                 else if (this.treeData[index].type == "file") {
                     this.current_file_object = this.treeData[index]
-                    code.content_origin = this.current_file_object.content
-                    code.content_modification = this.current_file_object.modification_content
+                    this.setCurrentFileObject()
                 }
             },
             getParent: function () {
                 index = this.treeData.length - 1
                 if (this.treeData[index].type == "parent") {
                     parent = this.treeData.pop(index)
+                    this.dir_path = parent.dir_path
                     this.treeData = parent.parent
                     this.initCurrentFileObject()
                 }
@@ -131,18 +288,32 @@
                 code.content_origin = ''
                 code.content_modification = ''
             },
-            save_file: function() {
+            setCurrentFileObject: function() {
+                code.content_origin = this.current_file_object.content
+                code.content_modification = this.current_file_object.modification_content
+            },
+            SaveFile: function() {
                 this.$http.put(this.apiUrl_save_file, this.current_file_object, 
                     {headers: {'Content-Type':'application/json; charset=UTF-8'}})
                     .then(function () {
                     this.current_file_object.content = this.current_file_object.modification_content
-                    code.content_origin = this.current_file_object.content
-                    code.content_modification = this.current_file_object.modification_content
+                    this.setCurrentFileObject()
                     alert("Save success!!")
                 }, function (err) {
                     console.log(err)
                 })
-            }
+            },
+            AddObjToTreeData: function(obj_data) {
+                this.treeData.splice(-1, 0, obj_data)
+                index = this.treeData.indexOf(obj_data)
+                this.current_file_object = this.treeData[index]
+                this.setCurrentFileObject()
+            },
+            RemoveObjOfTreeData: function(obj_data) {
+                index = this.treeData.indexOf(obj_data)
+                this.treeData.splice(index, 1)
+                this.initCurrentFileObject()
+            },
         }, 
         mounted() { this.getTreeData() }
     })
@@ -185,11 +356,9 @@
 
     const code = new Vue({
         el: "#code",
-        data () {
-            return {
-                content_origin: '',
-                content_modification: ''
-            }
+        data: {
+            content_origin: '',
+            content_modification: ''
         },
         methods: {
             changeContent_modification (val) {

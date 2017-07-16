@@ -1,35 +1,105 @@
 {% extends "layout.html" %}
 
 {% block header %}
-    <div>
-        header
-    </div>
+<style>
+  .modal-mask {
+    position: fixed;
+    z-index: 9998;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 1);
+    display: table;
+    transition: opacity .3s ease;
+  }
+
+  .modal-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
+  .modal-container {
+    max-width: 500px;
+    margin: 0px auto;
+    background-color: #000;
+    padding: 20px 30px;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 1);
+    transition: all .3s ease;
+  }
+
+
+</style>
 {% endblock %}
 
 {% block nav %}
 {% endblock %}
 
 {% block section %}
-    <router-link to="/">Go to index</router-link>
-    <router-link to="/upload">Go to upload</router-link>
+   
+<!-- template for the modal component -->
+<script type="text/x-template" id="modal-template">
+  <transition name="modal">
+    <div class="modal-mask">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+
+          <div class="modal-header">
+              <button type="button" class="close" @click="$emit('close')">&times;</button>
+              <h4 class="modal-title">Modal title</h4>
+          </div>
+
+          <div class="modal-body">
+              <p>One fine body…</p>
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn btn-default" @click="$emit('close')">Close</button>
+              <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+</script>
+
+<!-- app -->
+<div id="app">
+  <button id="show-modal" @click="showModal = true">Show Modal</button>
+    <!-- use the modal component, pass in the prop -->
+    <modal_save v-if="showModal" @close="showModal = false">
+      <!--
+        you can use custom content here to overwrite
+        default content
+      -->
+      <h3 slot="header">custom header</h3>
+    </modal_save>
+</div>
+
+
+
 {% endblock %}
 
 {% block footer %}
 {% endblock %}
 
+{% block template %}
+{% endblock %}
+
 {% block script %}
     <script>
-        const frameCompent = { template: '<iframe> :src="$route.path" style="xxx">' }
-        var routes = [
-          { path: '/:menu/:select', component: frameCompent },
-        ]
-        var router = new VueRouter({
-            routes:routes
-        })
-        const app = new Vue({
-            router
-        }).$mount('#app')
+      // register modal component
+Vue.component('modal_save', {
+  template: '#modal-template'
+})
 
-
+// start app
+new Vue({
+  el: '#app',
+  data: {
+    showModal: false
+  }
+})
     </script>
 {% endblock %}

@@ -14,7 +14,7 @@
             <form @submit.prevent="submit" class="form-horizontal">
                 <fieldset>
                     <div class="field">
-                        <input type="file" v-model="myFile" name='file' multiple size="50" style="margin: 0 auto; " >
+                        <input type="file" name='file' multiple size="50" style="margin: 0 auto; " >
                     </div>
                     <button type="submit" class="btn btn-success" style="margin: 0 auto; ">upload</button>
                 </fieldset>
@@ -25,6 +25,9 @@
 {% endblock %}
 
 {% block footer %}
+{% endblock %}
+
+{% block template %}
 {% endblock %}
 
 {% block script %}

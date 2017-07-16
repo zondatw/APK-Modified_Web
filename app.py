@@ -7,7 +7,7 @@ from multiprocessing import Process
 from subprocess import PIPE, STDOUT
 
 from flask import Flask
-from flask import jsonify, request
+from flask import jsonify, request, json
 from flask import render_template
 from werkzeug.utils import secure_filename
 
@@ -248,7 +248,6 @@ def reinstallAPK():
         .format(adb_path=flask_config.adb_path, 
                 device=device, 
                 apk_file_path=flask_config.new_apk_file_path)
-    print(flask_config.new_apk_file_path)
     ret_mes = subprocess.check_output(install_format, shell=True)
     print(ret_mes.decode('utf-8'))
     return jsonify()
@@ -256,9 +255,33 @@ def reinstallAPK():
 
 @app.route('/api/save_file', methods=['PUT'])
 def save_file():
-    dict_file = request.get_json()
+    dict_file = request.json
     with open(dict_file['path'], 'w') as f:
         f.write(dict_file['modification_content'])
+    return jsonify()
+
+
+@app.route('/api/add_file', methods=['POST'])
+def add_file():
+    path_format = r"{dir_path}\{file_name}" \
+        .format(dir_path=request.form['dir_path'],
+                file_name=request.form['file_name'])
+    with open(path_format, 'w') as f:
+        f.write(request.form['file_content'])
+    return jsonify({
+        'name': request.form['file_name'],
+        'path': path_format,
+        'type': 'file',
+        'content': request.form['file_content'],
+        'modification_content': request.form['file_content']
+    })
+
+
+@app.route('/api/remove_file', methods=['PUT'])
+def remove_file():
+    path = request.json['path']
+    delete_format = r"del /Q {path}".format(path=path)
+    ret_mes = str(subprocess.check_output(delete_format, shell=True))
     return jsonify()
 
 
@@ -268,6 +291,13 @@ def upload_exists_sign():
     flask_config.sign_alias = request.form['alias']
     f = request.files.get('file')
     f.save(flask_config.keystore_path)
+    return jsonify()
+
+
+@app.route('/api/new_sign', methods=['POST'])
+def new_sign():
+    dict_data = {key: value[0] for key, value in dict(request.form).items()}
+    create_sign(dict_data)
     return jsonify()
 
 
@@ -325,6 +355,10 @@ def emulator():
 @app.route('/reinstall')
 def reinstall():
     return render_template('reinstall.html')
+
+@app.route('/test_index')
+def test_index():
+    return render_template('test_index.html')
 
 
 if __name__ == '__main__':
