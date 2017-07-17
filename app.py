@@ -230,8 +230,8 @@ def getStartEmulatorDevices():
     return jsonify(return_start_devices_list)
 
 
-@app.route('/api/reinstallAPK', methods=['PUT'])
-def reinstallAPK():
+@app.route('/api/installAPK', methods=['PUT'])
+def installAPK():
     device = str(request.data, 'utf-8')
     uninstall_format = "\"{adb_path}\" -s {device} uninstall {package_name}" \
         .format(adb_path=flask_config.adb_path, 
@@ -360,9 +360,9 @@ def build():
 def emulator():
     return render_template('emulator.html')
 
-@app.route('/reinstall')
-def reinstall():
-    return render_template('reinstall.html')
+@app.route('/install')
+def install():
+    return render_template('install.html')
 
 @app.route('/test_index')
 def test_index():

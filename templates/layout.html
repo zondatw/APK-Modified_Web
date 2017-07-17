@@ -50,7 +50,7 @@
                                         <a @click="goEmulator">start emulator</a>
                                     </li>
                                     <li>
-                                        <a @click="goReinstall">reinstall apk</a>
+                                        <a @click="goinstall">install apk</a>
                                     </li>
                                 </ul>
                             </li>
@@ -87,7 +87,7 @@
                 redirectURL_keystore: '/keystore',
                 redirectURL_build: '/build',
                 redirectURL_emulator: '/emulator',
-                redirectURL_reinstall: '/reinstall',
+                redirectURL_install: '/install',
             },
             methods: {
                 goHome: function () {
@@ -108,8 +108,8 @@
                 goEmulator: function () {
                     window.location.href = this.redirectURL_emulator;
                 },
-                goReinstall: function () {
-                    window.location.href = this.redirectURL_reinstall;
+                goinstall: function () {
+                    window.location.href = this.redirectURL_install;
                 },
 
             }

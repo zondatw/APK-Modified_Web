@@ -7,8 +7,8 @@
 {% endblock %}
 
 {% block section %}
-    <div id="reinstall" class="jumbotron", style="max-width: 500px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
-        <h2>Reinstall APK</h2>
+    <div id="install" class="jumbotron", style="max-width: 500px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
+        <h2>Install APK</h2>
         <form @submit.prevent="submit" class="form-horizontal">
             <fieldset>
                 <div id="start_emulator_list" class="form-group">
@@ -23,7 +23,7 @@
                         <span>Selected: {{ selected }}</span>
                     </p>
                     <p>
-                        <button  class="btn btn-success" v-on:click="reinstallAPK">reinstall</button>
+                        <button  class="btn btn-success" v-on:click="installAPK">Install</button>
                     </p>
                 </div>
             </fieldset>
@@ -45,7 +45,7 @@
                 selected: '',
                 options: [],
                 apiUrl: "/api/getStartEmulatorDevices",
-                apiUrl2: "/api/reinstallAPK"
+                apiUrl2: "/api/installAPK"
             },
             methods: {
                 getStartEmulatorDevices: function () {
@@ -56,12 +56,12 @@
                         console.log(err)
                     })
                 },
-                reinstallAPK: function () {
+                installAPK: function () {
                     let device = this.selected;
                     if (device != '') {
                         this.$http.put(this.apiUrl2, device) 
                             .then(function (response) {
-                            alert("Reinstall success!!")
+                            alert("Install success!!")
                         }, function (err) {
                             console.log(err)
                         })

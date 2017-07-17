@@ -18,8 +18,8 @@ build
 ![picture](picture/build.JPG)  
 start_emulator  
 ![picture](picture/emulator.JPG)  
-reinstall  
-![picture](picture/reinstall.JPG)  
+install  
+![picture](picture/install.JPG)  
 
 ## 使用須知
 先到flask_config把上面的路徑改成自己電腦的路徑。  
