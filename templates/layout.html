@@ -9,7 +9,7 @@
         <script src="../static/js/bootstrap.min.js"></script>
         <script src="../static/js/vue.js"></script>
         <script src="../static/js/vue-resource@1.3.3.js"></script>
-        <title>APK Modify Web</title>
+        <title>APK-Modified Web</title>
         {% block head %}{% endblock %}
     </head>
 
@@ -21,7 +21,7 @@
             <div class="navbar navbar-default">
                 <div class="container">
                     <div class="navbar-header">
-                        <a class="navbar-brand" @click="goHome">APK Modify Web</a>
+                        <a class="navbar-brand" @click="goHome">APK-Modified Web</a>
                         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -38,7 +38,7 @@
                                 <a @click="goModification">Modification</a>
                             </li>
                             <li>
-                                <a @click="goSign">Sign</a>
+                                <a @click="goKeystore">Keystore</a>
                             </li>
                             <li>
                                 <a @click="goBuild">Build</a>
@@ -84,7 +84,7 @@
                 redirectURL_indx: '/',
                 redirectURL_uplaod: '/upload',
                 redirectURL_modification: '/modification',
-                redirectURL_sign: '/sign',
+                redirectURL_keystore: '/keystore',
                 redirectURL_build: '/build',
                 redirectURL_emulator: '/emulator',
                 redirectURL_reinstall: '/reinstall',
@@ -99,8 +99,8 @@
                 goModification: function () {
                     window.location.href = this.redirectURL_modification;
                 },
-                goSign: function () {
-                    window.location.href = this.redirectURL_sign;
+                goKeystore: function () {
+                    window.location.href = this.redirectURL_keystore;
                 },
                 goBuild: function () {
                     window.location.href = this.redirectURL_build;

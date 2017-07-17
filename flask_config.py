@@ -16,9 +16,6 @@ android_manifest_xml_path = None
 package_name = None
 
 keystore_path = r'tmp\sign\sign.keystore'
-sign_storepass = ''
-sign_alias = ''
-
-devices_list = []
-start_devices_list = []
+keystore_storepass = ''
+keystore_alias = ''
 

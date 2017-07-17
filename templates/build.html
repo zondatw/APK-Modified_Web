@@ -7,12 +7,13 @@
 {% endblock %}
 
 {% block section %}
-    <div id="build_apk" class="jumbotron", style="max-width: 300px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
+    <div id="build_apk" class="jumbotron", style="max-width: 400px; margin: 0 auto; padding-left: 60px; padding-right: 60px">
         <h2>Build APK</h2>
         <div id="build">
             <form @submit.prevent="submit" class="form-horizontal">
                 <fieldset>
                     <button type="submit" class="btn btn-success" style="margin: 0 auto; ">Build</button>
+                    <button type="button" @click="downloadNewApk" class="btn btn-success" style="margin: 0 auto; ">Download New APK</button>
                 </fieldset>
             </form>
         </div>
@@ -31,18 +32,21 @@
             el: '#build',
             data: {
                 apiUrl: '/api/build_and_sign_apk',
-                redirectURL: '/emulator'
+                redirectURL: '/emulator',
+                downloadUrl_new_apk: '/download/new_apk'
             },
             methods: {
                 submit: function(event) {
                     this.$http.post(this.apiUrl, )
                         .then(function (response) {
-                            window.location.href = this.redirectURL;
+                        alert('Build success!')
                     }, function (err) {
                         alert('Build Error')
                         console.log(err)
                     })
-
+                },
+                downloadNewApk: function(event) {
+                     window.location.href = this.downloadUrl_new_apk
                 }
             }
 

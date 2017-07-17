@@ -219,7 +219,6 @@
         },
         methods: {
             submit_remove_file: function() {
-                console.log("haaaaaaaaaaaa")
                 this.$http.put(this.apiUrl_remove_file, file_list.current_file_object,
                     {headers: {'Content-Type':'application/json; charset=UTF-8'}})
                     .then(function (response) {

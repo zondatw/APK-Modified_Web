@@ -1,4 +1,4 @@
-# apk modify web
+# APK-Modified Web
 
 ## 目的
 Web顯示的修改apk工具，之所以會用Web顯示，是為了讓所有裝置都能使用，此工具會有RWD，所以開起來後，可以用平板和手機使用此工具喔！  
@@ -10,8 +10,10 @@ upload
 ![picture](picture/upload.JPG)  
 modification
 ![picture](picture/modification.JPG)    
-sign  
-![picture](picture/sign.JPG)  
+exists_keystore  
+![picture](picture/exists_keystore.JPG)  
+new_keystore  
+![picture](picture/new_keystore.JPG)  
 build  
 ![picture](picture/build.JPG)  
 start_emulator  

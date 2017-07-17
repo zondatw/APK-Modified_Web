@@ -8,7 +8,7 @@ from subprocess import PIPE, STDOUT
 
 from flask import Flask
 from flask import jsonify, request, json
-from flask import render_template
+from flask import render_template, send_file
 from werkzeug.utils import secure_filename
 
 import flask_config
@@ -87,33 +87,33 @@ def build_apk():
         .format(unpack_dir_path=flask_config.unpack_dir_path, 
                 apk_name=flask_config.apk_name)
 
-def create_sign(dict_sign_data):
+def create_keystore(dict_keystore_data):
     keytool_format = \
         ("\"{java_path}\keytool\" -genkey -v -keyalg DSA -keysize 1024 -sigalg SHA1withDSA -validity 20000 " + \
         "-keystore {keystore_path} -alias {alias} -keypass {keypass} -storepass {storepass}") \
         .format(java_path=flask_config.java_path,
                 keystore_path=flask_config.keystore_path,
-                alias=dict_sign_data['alias'],
-                keypass=dict_sign_data['keypass'],
-                storepass=dict_sign_data['storepass'])
+                alias=dict_keystore_data['alias'],
+                keypass=dict_keystore_data['keypass'],
+                storepass=dict_keystore_data['storepass'])
 
-    keytool_sign_info_format = \
+    keytool_keystore_info_format = \
         "{common_name}\n{organization_unit}\n{organization_name}\n{locality_name}\n{state_name}\n{country}\ny\n" \
-        .format(common_name=dict_sign_data['common_name'],
-                organization_unit=dict_sign_data['organization_unit'],
-                organization_name=dict_sign_data['organization_name'],
-                locality_name=dict_sign_data['locality_name'],
-                state_name=dict_sign_data['state_name'],
-                country=dict_sign_data['country'])
+        .format(common_name=dict_keystore_data['common_name'],
+                organization_unit=dict_keystore_data['organization_unit'],
+                organization_name=dict_keystore_data['organization_name'],
+                locality_name=dict_keystore_data['locality_name'],
+                state_name=dict_keystore_data['state_name'],
+                country=dict_keystore_data['country'])
     
     p = subprocess.Popen(keytool_format, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
     
-    out = p.communicate(input=keytool_sign_info_format.encode())[0]
+    out = p.communicate(input=keytool_keystore_info_format.encode())[0]
     if 'Exception' in str(out):
-        print("Exception", str(out))
+        print("Exception", out.decode('UTF-8', 'strict'))
         return False
     else:
-        print("create sign success!")
+        print("create keystore success!")
 
 
 def sign_apk():
@@ -122,9 +122,9 @@ def sign_apk():
         "-keystore {keystore_path} -storepass {storepass} \"{apk_file_path}\" {alias}") \
         .format(java_path=flask_config.java_path,
                 keystore_path=flask_config.keystore_path,
-                storepass=flask_config.sign_storepass,
+                storepass=flask_config.keystore_storepass,
                 apk_file_path=flask_config.new_apk_file_path,
-                alias=flask_config.sign_alias)
+                alias=flask_config.keystore_alias)
                 
     p = subprocess.Popen(jarsigner_format, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
     out = p.communicate()[0]
@@ -194,10 +194,8 @@ def getEmulatorDevices():
 
     ret_mes = subprocess.check_output(emulator_list_format, shell=True)
     device_list = [device.strip() for device in ret_mes.decode('utf-8').split('\n') if device]
-    flask_config.devices_list = []
     return_devices_list = []
     for idx, device in enumerate(device_list):
-        flask_config.devices_list.append(device)
         return_devices_list.append({
             "idx": idx,
             "device": device})
@@ -222,10 +220,8 @@ def getStartEmulatorDevices():
 
     device_list = [device.split('\t')[0].strip() for device in ret_mes.decode('utf-8').split('\n') \
         if device.strip() and len(device.split('\t')) == 2 and 'device' in device.split('\t')[-1]]
-    flask_config.start_devices_list = []
     return_start_devices_list = []
     for idx, device in enumerate(device_list):
-        flask_config.start_devices_list.append(device)
         return_start_devices_list.append({
             'idx': idx,
             'device': device
@@ -285,19 +281,21 @@ def remove_file():
     return jsonify()
 
 
-@app.route('/api/upload_exists_sign', methods=['POST'])
-def upload_exists_sign():
-    flask_config.sign_storepass = request.form['storepass']
-    flask_config.sign_alias = request.form['alias']
+@app.route('/api/upload_exists_keystore', methods=['POST'])
+def upload_exists_keystore():
+    flask_config.keystore_storepass = request.form['storepass']
+    flask_config.keystore_alias = request.form['alias']
     f = request.files.get('file')
     f.save(flask_config.keystore_path)
     return jsonify()
 
 
-@app.route('/api/new_sign', methods=['POST'])
-def new_sign():
+@app.route('/api/new_keystore', methods=['POST'])
+def new_keystore():
     dict_data = {key: value[0] for key, value in dict(request.form).items()}
-    create_sign(dict_data)
+    create_keystore(dict_data)
+    flask_config.keystore_storepass = dict_data['storepass']
+    flask_config.keystore_alias = dict_data['alias']
     return jsonify()
 
 
@@ -306,6 +304,16 @@ def build_and_sign_apk():
     build_apk()
     sign_apk()
     return jsonify()
+
+
+@app.route('/download/new_apk', methods=['GET'])
+def download_new_apk():
+    return send_file(flask_config.new_apk_file_path)
+	
+
+@app.route('/download/keystore', methods=['GET'])
+def download_keystore():
+    return send_file(flask_config.keystore_path)
 
 
 #--------------------------------------------------------------
@@ -340,9 +348,9 @@ def upload_file():
 def modification():
     return render_template('modification.html')
 
-@app.route('/sign')
-def sign():
-    return render_template('sign.html')
+@app.route('/keystore')
+def keystore():
+    return render_template('keystore.html')
 
 @app.route('/build')
 def build():
