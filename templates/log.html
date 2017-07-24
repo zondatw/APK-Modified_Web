@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block section %}
+    <div id="emulator_log" class="jumbotron", style="max-width: 800px; height: 500px; margin: 0 auto; padding-left: 30px; padding-right: 30px">
+        <div id="select_log" class="col-md-6">
+            <h2>Log</h2>
+            <form @submit.prevent="ref_log" class="form-horizontal" >
+                <fieldset>
+                    <div id="start_emulator_list" class="form-group">
+                        <p>
+                            <select class="form-control" v-model="selected">
+                                <option v-for="option in options" v-bind:device="option.device">
+                                    {{ option.device }}
+                                </option>
+                            </select>
+                        </p>
+                        <p>
+                            <span>Selected: {{ selected }}</span>
+                        </p>
+                        <p>
+                            <button  class="btn btn-success">Log</button>
+                        </p>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div id="code" >
+            <div class="col-md-6">
+                <div style="height: 400px">
+                    <editor editor-id="log" :content="content_log"></editor>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block template %}
+{% endblock %}
+
+{% block script %}
+    <script src="../static/js/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+    new Vue({
+        el: '#select_log',
+        data: {
+            selected: '',
+            options: [],
+            apiUrl: "/api/getStartEmulatorDevices",
+            apiUrl_get_log: "/api/get_log",
+            apiUrl_start_get_log: "/api/start_get_log"
+        },
+        methods: {
+            getStartEmulatorDevices: function () {
+                this.$http.get(this.apiUrl)
+                    .then(function (response) {
+                        this.options = response.data
+                }, function (err) {
+                    console.log(err)
+                })
+            },
+            ref_log: function() {
+                this.$http.get(this.apiUrl_start_get_log)
+                    .then(function (response) {
+                }, function (err) {
+                    console.log(err)
+                })
+                this.timer = setInterval(this.getLog, 1000)
+            },
+            getLog: function () {
+                console.log('haha')
+                this.$http.get(this.apiUrl_get_log)
+                    .then(function (response) {
+                    console.log(response.data)
+                    code.content_log = response.data
+                }, function (err) {
+                    console.log(err)
+                })
+            }
+        }, 
+        mounted() { this.getStartEmulatorDevices() }
+    })  
+
+    // code
+    Vue.component('Editor', {
+        template: '<div :id="editorId" style="width: 100%; height: 100%;"></div>',
+        props: ['editorId', 'content', 'lang', 'theme'],
+        data () {
+            return {
+                editor: Object,
+                beforeContent: ''
+            }
+        },
+        watch: {
+            'content' (value) {
+                if (this.beforeContent !== value) {
+                    this.editor.setValue(value, 1)
+                }
+            }
+        },
+        mounted () {
+                const lang = this.lang || 'text'
+                const theme = this.theme || 'monokai'
+            
+                this.editor = window.ace.edit(this.editorId)
+                this.editor.setValue(this.content, 1)
+                
+                this.editor.getSession().setMode(`ace/mode/${lang}`)
+                this.editor.setTheme(`ace/theme/${theme}`)
+
+                this.editor.on('change', () => {
+                    this.beforeContent = this.editor.getValue()
+                    this.$emit('change-content', this.editor.getValue())
+                })
+            }
+        })
+
+
+    const code = new Vue({
+        el: "#code",
+        data: {
+            content_log: ''
+        },
+        methods: {
+        }
+    })
+    ////////////////////////////////////////
+    </script>
+{% endblock %}

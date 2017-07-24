@@ -357,13 +357,20 @@
         el: "#code",
         data: {
             content_origin: '',
-            content_modification: ''
+            content_modification: '',
+            apiUrl_save_modification: '/api/save_modification'
         },
         methods: {
             changeContent_modification (val) {
                 if (this.content_modification !== val) {
                     this.content_modification = val
                     file_list.current_file_object.modification_content = val
+                    this.$http.put(this.apiUrl_save_modification, file_list.current_file_object, 
+                        {headers: {'Content-Type':'application/json; charset=UTF-8'}})
+                        .then(function () {
+                    }, function (err) {
+                        console.log(err)
+                    })
                 }
             }
         }

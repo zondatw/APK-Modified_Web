@@ -5,3 +5,4 @@ venv
 tmp/apk/*
 tmp/classes/*
 tmp/sign/*
+tmp/log/*

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import codecs
 import os
+import sys
 import subprocess
+import time
 import xml.etree.ElementTree as ET
 from multiprocessing import Process
 from subprocess import PIPE, STDOUT
@@ -83,9 +85,6 @@ def build_apk():
         print("Error", ret_mes)
         return False
 
-    flask_config.new_apk_file_path = "{unpack_dir_path}\dist\{apk_name}.apk" \
-        .format(unpack_dir_path=flask_config.unpack_dir_path, 
-                apk_name=flask_config.apk_name)
 
 def create_keystore(dict_keystore_data):
     keytool_format = \
@@ -166,6 +165,23 @@ def unpack_apk():
     return True
 
 
+def move_apk_to_dist_dir():
+    mkdir_dist_format = "mkdir {unpack_dir_path}\\dist" \
+        .format(unpack_dir_path=flask_config.unpack_dir_path)
+
+    ret_mes = subprocess.check_output(mkdir_dist_format, shell=True)
+
+    copy_apk_to_dist_format = "copy {apk_file_path} {unpack_dir_path}\dist\." \
+        .format(apk_file_path=flask_config.apk_file_path,
+                unpack_dir_path=flask_config.unpack_dir_path)
+
+    ret_mes = subprocess.check_output(copy_apk_to_dist_format, shell=True)
+
+    flask_config.new_apk_file_path = "{unpack_dir_path}\dist\{apk_name}.apk" \
+        .format(unpack_dir_path=flask_config.unpack_dir_path, 
+                apk_name=flask_config.apk_name)
+
+
 def read_package_name():
     tree = ET.parse(flask_config.android_manifest_xml_path)
     root = tree.getroot()
@@ -176,15 +192,89 @@ def start_emulator_device(device):
     open_emulator_format = "\"{emulator_path}\" -avd {device} -netdelay none -netspeed full" \
 	    .format(emulator_path=flask_config.emulator_path, 
                 device=device)
-    subprocess.Popen(open_emulator_format, shell=True,
+    proc = subprocess.Popen(open_emulator_format, shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in proc.stdout:
+        str_line = line.decode('UTF-8', 'strict')
+        if 'Serial number of this emulator (for ADB): ' in str_line:
+            emulator_name = str_line.strip().split('Serial number of this emulator (for ADB): ')[-1]
+            break
+
+    #p = Process(target=wait_emulator_and_start_get_log(emulator_name))
+    #p.start()
+    
+
+def wait_emulator_and_start_get_log(emulator_name):
+    adb_list_format = "\"{adb_path}\" devices" \
+        .format(adb_path=flask_config.adb_path)
+    count = 60 * 1
+    while count:
+        ret_mes = subprocess.check_output(adb_list_format, shell=True)
+        device_list = [device.split('\t')[0].strip() for device in ret_mes.decode('utf-8').split('\n') \
+            if device.strip() and len(device.split('\t')) == 2 and 'device' in device.split('\t')[-1]]
+        if emulator_name in device_list:
+            p = Process(target=get_log_of_emulator(emulator_name))
+            p.start()
+            break
+        time.sleep(5)
+        count -= 1
+
+def start_vnc_of_emulator(device):
+    push_vnc_format = "\"{adb_path}\" -s {device} push {androidvncserver_path} {emulator_androidvncserver_path}" \
+        .format(adb_path=flask_config.adb_path,
+                device=device,
+                androidvncserver_path=flask_config.androidvncserver_path,
+                emulator_androidvncserver_path=flask_config.emulator_androidvncserver_path)
+    ret_mes = subprocess.check_output(push_vnc_format, shell=True)
+
+    chmod_775_format = "\"{adb_path}\" -s {device} shell chmod 775 {emulator_androidvncserver_path}" \
+        .format(adb_path=flask_config.adb_path,
+                device=device,
+                emulator_androidvncserver_path=emulator_androidvncserver_path)
+    ret_mes = subprocess.check_output(chmod_775_format, shell=True)
+
+    forward_tcp_5901_format = "\"{adb_path}\" -s {device} forward tcp:5901 tcp:5901" \
+        .format(adb_path=flask_config.adb_path,
+                device=device)
+    ret_mes = subprocess.check_output(forward_tcp_5901_format, shell=True)
+
+    forward_tcp_5801_format = "\"{adb_path}\" -s {device} forward tcp:5801 tcp:5801" \
+        .format(adb_path=flask_config.adb_path,
+                device=device)
+    ret_mes = subprocess.check_output(forward_tcp_5801_format, shell=True)
+
+    start_vnc_format = "\"{adb_path}\" -s {device} shell ./{emulator_androidvncserver_path}" \
+        .format(adb_path=flask_config.adb_path,
+                device=device,
+                emulator_androidvncserver_path=emulator_androidvncserver_path)
+    subprocess.Popen(start_vnc_format, shell=True,
              stdin=None, stdout=None, stderr=None, close_fds=True)
+
+
+def get_log_of_emulator(device):
+    print("get_log")
+    get_log_format = "\"{adb_path}\" -s {device} logcat" \
+        .format(adb_path=flask_config.adb_path,
+                device=device)
+
+    CREATE_NO_WINDOW = 0x08000000
+
+    with open(flask_config.log_file_path, 'w') as f:
+        proc = subprocess.Popen(get_log_format,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            creationflags=CREATE_NO_WINDOW)
+        for line in proc.stdout:
+            f.write(line.decode('UTF-8', 'strict'))
+            f.flush()
+        proc.kill()
 
 #--------------------------------------------------------------
 #   api
 #--------------------------------------------------------------
 @app.route('/api/treeData', methods=['GET'])
 def treeData():
-    return jsonify(path_to_dict(flask_config.unpack_dir_path))
+    return jsonify(flask_config.treeData)
 
 
 @app.route('/api/getEmulatorDevices', methods=['GET'])
@@ -199,7 +289,6 @@ def getEmulatorDevices():
         return_devices_list.append({
             "idx": idx,
             "device": device})
-        print(idx, ':', device)
     return jsonify(return_devices_list)
 
 
@@ -226,7 +315,6 @@ def getStartEmulatorDevices():
             'idx': idx,
             'device': device
         })
-        print(idx, ':', device)
     return jsonify(return_start_devices_list)
 
 
@@ -249,28 +337,64 @@ def installAPK():
     return jsonify()
 
 
+@app.route('/api/save_modification', methods=['PUT'])
+def save_modification():
+    dict_modification = request.json
+    temp_treedata = flask_config.treeData
+    path_list = dict_modification['path'].split('\\')
+    for path in path_list:
+        for child in temp_treedata['children']:
+            if child['name'] == path:
+                temp_treedata = child
+                break
+    else:
+        temp_treedata['modification_content'] = dict_modification['modification_content']
+    return jsonify()
+
+
 @app.route('/api/save_file', methods=['PUT'])
 def save_file():
     dict_file = request.json
-    with open(dict_file['path'], 'w') as f:
-        f.write(dict_file['modification_content'])
+    temp_treedata = flask_config.treeData
+    path_list = dict_file['path'].split('\\')
+    for path in path_list:
+        for child in temp_treedata['children']:
+            if child['name'] == path:
+                temp_treedata = child
+                break
+    else:
+        with open(temp_treedata['path'], 'w') as f:
+            f.write(dict_file['modification_content'])
+        temp_treedata['content'] = dict_file['modification_content']
+        temp_treedata['modification_content'] = dict_file['modification_content']
+        
     return jsonify()
 
 
 @app.route('/api/add_file', methods=['POST'])
 def add_file():
-    path_format = r"{dir_path}\{file_name}" \
-        .format(dir_path=request.form['dir_path'],
-                file_name=request.form['file_name'])
-    with open(path_format, 'w') as f:
-        f.write(request.form['file_content'])
-    return jsonify({
-        'name': request.form['file_name'],
-        'path': path_format,
-        'type': 'file',
-        'content': request.form['file_content'],
-        'modification_content': request.form['file_content']
-    })
+    temp_treedata = flask_config.treeData
+    path_list = request.form['dir_path'].split('\\')
+    for path in path_list:
+        for child in temp_treedata['children']:
+            if child['name'] == path:
+                temp_treedata = child
+                break
+    else:
+        path_format = r"{dir_path}\{file_name}" \
+            .format(dir_path=temp_treedata['path'],
+                    file_name=request.form['file_name'])
+        with open(path_format, 'w') as f:
+            f.write(request.form['file_content'])
+        dict_file = {
+            'name': request.form['file_name'],
+            'path': path_format,
+            'type': 'file',
+            'content': request.form['file_content'],
+            'modification_content': request.form['file_content']
+        }
+        temp_treedata['children'].append(dict_file)
+        return jsonify(dict_file)
 
 
 @app.route('/api/remove_file', methods=['PUT'])
@@ -316,6 +440,22 @@ def download_keystore():
     return send_file(flask_config.keystore_path)
 
 
+@app.route('/api/get_log', methods=['GET'])
+def get_log():
+    file_content = ''
+    with open(flask_config.log_file_path, 'r') as f:
+        for line in f:
+            file_content += line
+    return jsonify(file_content)
+
+
+@app.route('/api/start_get_log', methods=['GET'])
+def start_get_log():
+    p = Process(target=get_log_of_emulator('emulator-5554'))
+    p.start()
+    return jsonify()
+    
+
 #--------------------------------------------------------------
 #   route
 #--------------------------------------------------------------
@@ -340,7 +480,9 @@ def upload_file():
             .format(unpack_dir_path=flask_config.unpack_dir_path)
         f.save(flask_config.apk_file_path)
         unpack_apk()
+        move_apk_to_dist_dir()
         read_package_name()
+        flask_config.treeData = path_to_dict(flask_config.unpack_dir_path)
         return jsonify()
 
 
@@ -363,6 +505,10 @@ def emulator():
 @app.route('/install')
 def install():
     return render_template('install.html')
+
+@app.route('/log')
+def log():
+    return render_template('log.html')
 
 @app.route('/test_index')
 def test_index():

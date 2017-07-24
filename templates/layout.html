@@ -52,6 +52,9 @@
                                     <li>
                                         <a @click="goinstall">install apk</a>
                                     </li>
+                                    <li>
+                                        <a @click="golog">log</a>
+                                    </li>
                                 </ul>
                             </li>
                         </ul>
@@ -88,28 +91,32 @@
                 redirectURL_build: '/build',
                 redirectURL_emulator: '/emulator',
                 redirectURL_install: '/install',
+                redirectURL_log: '/log',
             },
             methods: {
                 goHome: function () {
-                    window.location.href = this.redirectURL_indx;
+                    window.location.href = this.redirectURL_indx
                 },
                 goUpload: function () {
-                    window.location.href = this.redirectURL_uplaod;
+                    window.location.href = this.redirectURL_uplaod
                 },
                 goModification: function () {
-                    window.location.href = this.redirectURL_modification;
+                    window.location.href = this.redirectURL_modification
                 },
                 goKeystore: function () {
-                    window.location.href = this.redirectURL_keystore;
+                    window.location.href = this.redirectURL_keystore
                 },
                 goBuild: function () {
-                    window.location.href = this.redirectURL_build;
+                    window.location.href = this.redirectURL_build
                 },
                 goEmulator: function () {
-                    window.location.href = this.redirectURL_emulator;
+                    window.location.href = this.redirectURL_emulator
                 },
                 goinstall: function () {
-                    window.location.href = this.redirectURL_install;
+                    window.location.href = this.redirectURL_install
+                },
+                golog: function () {
+                    window.location.href = this.redirectURL_log
                 },
 
             }

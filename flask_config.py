@@ -15,7 +15,14 @@ new_apk_file_path = None
 android_manifest_xml_path = None
 package_name = None
 
+treeData = {}
+
 keystore_path = r'tmp\sign\sign.keystore'
 keystore_storepass = ''
 keystore_alias = ''
+
+log_file_path = r'tmp/log/logfile'
+
+androidvncserver_path = r'tools\androidvncserver'
+emulator_androidvncserver_path = r'/data/local/androidvncserver'
 
