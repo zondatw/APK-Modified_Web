@@ -349,7 +349,7 @@ def save_modification():
                 break
     else:
         temp_treedata['modification_content'] = dict_modification['modification_content']
-    return jsonify()
+        return jsonify()
 
 
 @app.route('/api/save_file', methods=['PUT'])
@@ -368,7 +368,7 @@ def save_file():
         temp_treedata['content'] = dict_file['modification_content']
         temp_treedata['modification_content'] = dict_file['modification_content']
         
-    return jsonify()
+        return jsonify()
 
 
 @app.route('/api/add_file', methods=['POST'])
@@ -399,10 +399,21 @@ def add_file():
 
 @app.route('/api/remove_file', methods=['PUT'])
 def remove_file():
-    path = request.json['path']
-    delete_format = r"del /Q {path}".format(path=path)
-    ret_mes = str(subprocess.check_output(delete_format, shell=True))
-    return jsonify()
+    pre_temp_treedata = flask_config.treeData
+    temp_treedata = flask_config.treeData
+    path_list = request.json['path'].split('\\')
+    for path in path_list:
+        pre_temp_treedata = temp_treedata
+        for child in temp_treedata['children']:
+            if child['name'] == path:
+                temp_treedata = child
+                break
+    else:
+        path = request.json['path']
+        delete_format = r"del /Q {path}".format(path=temp_treedata['path'])
+        ret_mes = str(subprocess.check_output(delete_format, shell=True))
+        pre_temp_treedata['children'].remove(temp_treedata)
+        return jsonify()
 
 
 @app.route('/api/upload_exists_keystore', methods=['POST'])

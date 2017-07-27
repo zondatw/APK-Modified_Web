@@ -38,3 +38,4 @@ upload -> (modification ->) sign -> build -> emulator
 5. 修改xml時，能有即時的畫面顯示  
 6. 新增、刪除資料夾  
 7. 新增Linux版本  
+8. log 目前還有點問題  
