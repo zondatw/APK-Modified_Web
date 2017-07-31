@@ -6,3 +6,4 @@ tmp/apk/*
 tmp/classes/*
 tmp/sign/*
 tmp/log/*
+tmp/java/*

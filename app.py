@@ -158,9 +158,10 @@ def unpack_apk():
     else:
         print("extract classes.dex success!")
         
-    dex2jar_path_format = "\"{dex2jar_path}\" -f {classes_dir_path}\classes.dex -o {classes_dir_path}\classes.jar" \
+    dex2jar_path_format = "\"{dex2jar_path}\" -f {classes_file_path} -o {classes_jar_path}" \
         .format(dex2jar_path=flask_config.dex2jar_path,
-                classes_dir_path=flask_config.classes_dir_path)
+                classes_file_path=flask_config.classes_file_path,
+                classes_jar_path=flask_config.classes_jar_path)
     ret_mes = str(subprocess.check_output(dex2jar_path_format, shell=True))
     return True
 
@@ -188,23 +189,43 @@ def read_package_name():
     flask_config.package_name = root.attrib['package']
 
 
-def start_emulator_device(device):
-    open_emulator_format = "\"{emulator_path}\" -avd {device} -netdelay none -netspeed full" \
+def jar_to_java():
+    jadx_path_format = "\"{jadx_path}\" -d {java_code_dir_path} {classes_jar_path}"\
+        .format(jadx_path=flask_config.jadx_path,
+                java_code_dir_path=flask_config.java_code_dir_path,
+                classes_jar_path=flask_config.classes_jar_path)
+    ret_mes = str(subprocess.check_output(jadx_path_format, shell=True))
+
+
+def smali_to_java():
+    dj2_smali_path =  "\"{d2j_smali_path}\" {unpack_dir_path}\smali -o {classes_file_path}" \
+        .format(d2j_smali_path=flask_config.d2j_smali_path,
+                unpack_dir_path=flask_config.unpack_dir_path,
+                classes_file_path=flask_config.classes_file_path)
+    ret_mes = str(subprocess.check_output(dj2_smali_path, shell=True))
+
+    dex2jar_path_format = "\"{dex2jar_path}\" {classes_file_path} -o {classes_jar_path}"\
+        .format(dex2jar_path=flask_config.dex2jar_path,
+                classes_file_path=flask_config.classes_file_pat,
+                classes_jar_path=flask_config.classes_jar_path)
+    ret_mes = str(subprocess.check_output(dex2jar_path_format, shell=True))
+    jar_to_java()
+
+
+def start_emulator_device(emulator):
+    open_emulator_format = "\"{emulator_path}\" -avd {emulator} -netdelay none -netspeed full" \
 	    .format(emulator_path=flask_config.emulator_path, 
-                device=device)
+                emulator=emulator)
     proc = subprocess.Popen(open_emulator_format, shell=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in proc.stdout:
         str_line = line.decode('UTF-8', 'strict')
         if 'Serial number of this emulator (for ADB): ' in str_line:
-            emulator_name = str_line.strip().split('Serial number of this emulator (for ADB): ')[-1]
+            device = str_line.strip().split('Serial number of this emulator (for ADB): ')[-1]
             break
-
-    #p = Process(target=wait_emulator_and_start_get_log(emulator_name))
-    #p.start()
     
 
-def wait_emulator_and_start_get_log(emulator_name):
+def wait_emulator_and_start_get_log(device):
     adb_list_format = "\"{adb_path}\" devices" \
         .format(adb_path=flask_config.adb_path)
     count = 60 * 1
@@ -212,8 +233,8 @@ def wait_emulator_and_start_get_log(emulator_name):
         ret_mes = subprocess.check_output(adb_list_format, shell=True)
         device_list = [device.split('\t')[0].strip() for device in ret_mes.decode('utf-8').split('\n') \
             if device.strip() and len(device.split('\t')) == 2 and 'device' in device.split('\t')[-1]]
-        if emulator_name in device_list:
-            p = Process(target=get_log_of_emulator(emulator_name))
+        if device in device_list:
+            p = Process(target=get_log_of_emulator(device))
             p.start()
             break
         time.sleep(5)
@@ -230,7 +251,7 @@ def start_vnc_of_emulator(device):
     chmod_775_format = "\"{adb_path}\" -s {device} shell chmod 775 {emulator_androidvncserver_path}" \
         .format(adb_path=flask_config.adb_path,
                 device=device,
-                emulator_androidvncserver_path=emulator_androidvncserver_path)
+                emulator_androidvncserver_path=flask_config.emulator_androidvncserver_path)
     ret_mes = subprocess.check_output(chmod_775_format, shell=True)
 
     forward_tcp_5901_format = "\"{adb_path}\" -s {device} forward tcp:5901 tcp:5901" \
@@ -246,7 +267,7 @@ def start_vnc_of_emulator(device):
     start_vnc_format = "\"{adb_path}\" -s {device} shell ./{emulator_androidvncserver_path}" \
         .format(adb_path=flask_config.adb_path,
                 device=device,
-                emulator_androidvncserver_path=emulator_androidvncserver_path)
+                emulator_androidvncserver_path=flask_config.emulator_androidvncserver_path)
     subprocess.Popen(start_vnc_format, shell=True,
              stdin=None, stdout=None, stderr=None, close_fds=True)
 
@@ -269,6 +290,52 @@ def get_log_of_emulator(device):
             f.flush()
         proc.kill()
 
+def clear_dir(dir_path):
+    del_dir_format = "rmdir /s /q {dir_path}" \
+        .format(dir_path=dir_path)
+    ret_mes = subprocess.check_output(del_dir_format, shell=True)
+
+    mk_dir_format = "md {dir_path}" \
+        .format(dir_path=dir_path)
+    ret_mes = subprocess.check_output(mk_dir_format, shell=True)
+
+
+def init():
+    for dir_path in [
+        flask_config.apk_file_dir,
+        flask_config.classes_dir_path,
+        flask_config.java_code_dir_path,
+        flask_config.keystore_dir_path,
+        flask_config.log_dir_path
+    ]:
+        clear_dir(dir_path)
+
+
+def get_java_code_path(path):
+    path_list = path.split('\\')
+    dir_path = '\\'.join(path_list[path_list.index('smali') + 1: -1])
+    filename = path_list[-1]
+    filename = filename[:filename.index('.smali')]
+    idx = filename.find('$')
+    if idx >= 0:
+        filename = filename[:idx]
+    filename += '.java'
+    java_code_path = "{java_code_dir_path}\\{dir_path}\\{filename}" \
+        .format(java_code_dir_path=flask_config.java_code_dir_path,
+                dir_path=dir_path,
+                filename=filename)
+    return java_code_path
+
+
+def read_java_code(path):
+    java_code_path = get_java_code_path(path)
+    file_content = ''
+    with open(java_code_path, 'r') as f:
+        for line in f:
+            file_content += line.rstrip() + '\n'
+    return file_content
+
+
 #--------------------------------------------------------------
 #   api
 #--------------------------------------------------------------
@@ -277,25 +344,25 @@ def treeData():
     return jsonify(flask_config.treeData)
 
 
-@app.route('/api/getEmulatorDevices', methods=['GET'])
-def getEmulatorDevices():
+@app.route('/api/getEmulatorAvds', methods=['GET'])
+def getEmulatorAvds():
     emulator_list_format = "\"{emulator_path}\" -list-avds" \
         .format(emulator_path=flask_config.emulator_path)
 
     ret_mes = subprocess.check_output(emulator_list_format, shell=True)
-    device_list = [device.strip() for device in ret_mes.decode('utf-8').split('\n') if device]
-    return_devices_list = []
-    for idx, device in enumerate(device_list):
-        return_devices_list.append({
+    emulator_list = [emulator.strip() for emulator in ret_mes.decode('utf-8').split('\n') if emulator]
+    return_emulator_list = []
+    for idx, emulator in enumerate(emulator_list):
+        return_emulator_list.append({
             "idx": idx,
-            "device": device})
-    return jsonify(return_devices_list)
+            "emulator": emulator})
+    return jsonify(return_emulator_list)
 
 
-@app.route('/api/startEmulatorDevices', methods=['POST'])
-def startEmulatorDevices():
-    device = str(request.data,'utf-8')
-    p = Process(target=start_emulator_device(device))
+@app.route('/api/startEmulatorAvd', methods=['POST'])
+def startEmulatorAvd():
+    emulator = str(request.data,'utf-8')
+    p = Process(target=start_emulator_device(emulator))
     p.start()
     return jsonify()
 
@@ -416,6 +483,15 @@ def remove_file():
         return jsonify()
 
 
+@app.route('/api/get_java_code', methods=['POST'])
+def get_java_code():
+    print(request.json)
+    path = request.json['path']
+    return jsonify({
+        'java_code': read_java_code(path)
+    })
+
+
 @app.route('/api/upload_exists_keystore', methods=['POST'])
 def upload_exists_keystore():
     flask_config.keystore_storepass = request.form['storepass']
@@ -479,6 +555,7 @@ def upload_file():
     if request.method == 'GET':
         return render_template('upload.html')
     elif request.method == 'POST':
+        init()
         f = request.files.get('file')
         flask_config.apk_name = (f.filename).split('.apk')[0]
         flask_config.apk_file_path = '{apk_file_dir}\{filename}' \
@@ -491,6 +568,7 @@ def upload_file():
             .format(unpack_dir_path=flask_config.unpack_dir_path)
         f.save(flask_config.apk_file_path)
         unpack_apk()
+        jar_to_java()
         move_apk_to_dist_dir()
         read_package_name()
         flask_config.treeData = path_to_dict(flask_config.unpack_dir_path)

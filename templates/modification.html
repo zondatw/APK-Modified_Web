@@ -83,11 +83,14 @@
     <div id="section_nav" class="col-md-8">
         <ul class="nav nav-tabs">
             <li class="active">
-                <a href="#code" data-toggle="tab">Code</a>
+                <a href="#code_tab" data-toggle="tab">Code</a>
+            </li>
+            <li>
+                <a href="#java_tab" data-toggle="tab">Java</a>
             </li>
         </ul>
         <div id="myTabContent" class="tab-content">
-            <div class="tab-pane fade active in" id="code">
+            <div class="tab-pane fade active in" id="code_tab">
                 <!-- code -->
                 <div id="code">
                     <div class="col-md-6">
@@ -105,6 +108,15 @@
                     </div>
                 </div>
                 <!-- code end -->
+            </div>
+            <div class="tab-pane fade" id="java_tab">
+                <div id="java_code">
+                    <div class="col-md-12">
+                        <div style="height: 400px; max-width: 800px;">
+                            <Java_view view-id="java" :content="content_java"></Java_view>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -286,10 +298,12 @@
                 this.current_file_object = null
                 code.content_origin = ''
                 code.content_modification = ''
+                java_code.content_java = ''
             },
             setCurrentFileObject: function() {
                 code.content_origin = this.current_file_object.content
                 code.content_modification = this.current_file_object.modification_content
+                java_code.getJavaCode(this.current_file_object.path)
             },
             SaveFile: function() {
                 this.$http.put(this.apiUrl_save_file, this.current_file_object, 
@@ -372,6 +386,61 @@
                         console.log(err)
                     })
                 }
+            }
+        }
+    })
+    ////////////////////////////////////////
+
+    // code
+    Vue.component('Java_view', {
+        template: '<div :id="viewId" style="width: 100%; height: 100%;"></div>',
+        props: ['viewId', 'content', 'lang', 'theme'],
+        data () {
+            return {
+                view: Object,
+                beforeContent: ''
+            }
+        },
+        watch: {
+            'content' (value) {
+                if (this.beforeContent !== value) {
+                    this.view.setValue(value, 1)
+                }
+            }
+        },
+        mounted () {
+                const lang = this.lang || 'java'
+                const theme = this.theme || 'monokai'
+            
+                this.view = window.ace.edit(this.viewId)
+                this.view.setValue(this.content, 1)
+                
+                this.view.getSession().setMode(`ace/mode/${lang}`)
+                this.view.setTheme(`ace/theme/${theme}`)
+
+                this.view.on('change', () => {
+                    this.beforeContent = this.view.getValue()
+                    this.$emit('change-content', this.view.getValue())
+                })
+            }
+        })
+
+
+    const java_code = new Vue({
+        el: "#java_code",
+        data: {
+            content_java: '',
+            apiUrl_getJavaCode: '/api/get_java_code'
+        },
+        methods: {
+            getJavaCode: function(path) {
+                this.$http.post(this.apiUrl_getJavaCode, {'path': path}, 
+                        {headers: {'Content-Type':'application/json; charset=UTF-8'}})
+                    .then(function (response) {
+                    this.content_java = response.data.java_code
+                }, function (err) {
+                    console.log(err)
+                })
             }
         }
     })

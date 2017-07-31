@@ -14,8 +14,8 @@
                 <div id="emulator_list" class="form-group">
                     <p>
                         <select class="form-control" v-model="selected">
-                            <option v-for="option in options" v-bind:device="option.device">
-                                {{ option.device }}
+                            <option v-for="option in options" v-bind:emulator="option.emulator">
+                                {{ option.emulator }}
                             </option>
                         </select>
                     </p>
@@ -45,11 +45,11 @@
             data: {
                 selected: '',
                 options: [],
-                apiUrl: "/api/getEmulatorDevices",
-                apiUrl2: "/api/startEmulatorDevices"
+                apiUrl: "/api/getEmulatorAvds",
+                apiUrl2: "/api/startEmulatorAvd"
             },
             methods: {
-                getEmulatorDevices: function () {
+                getEmulatorAvds: function () {
                     this.$http.get(this.apiUrl)
                         .then(function (response) {
                             this.options = response.data
@@ -58,9 +58,9 @@
                     })
                 },
                 startEmulator: function () {
-                    let device = this.selected;
-                    if (device != '') {
-                        this.$http.post(this.apiUrl2, device) 
+                    let emulator = this.selected;
+                    if (emulator != '') {
+                        this.$http.post(this.apiUrl2, emulator) 
                             .then(function (response) {
                         }, function (err) {
                             console.log(err)
@@ -68,7 +68,7 @@
                     }
                 }
             }, 
-            mounted() { this.getEmulatorDevices() }
+            mounted() { this.getEmulatorAvds() }
         })
     </script>
 {% endblock %}
