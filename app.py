@@ -72,13 +72,14 @@ def path_to_dict(path):
     return dict_dir
 
 
-def build_apk():
+def build_apk(build_apk_file_path):
     '''
         build new apk file
     '''
-    apktool_format = "\"{apktool_path}\" b {unpack_dir_path}" \
+    apktool_format = "\"{apktool_path}\" b {unpack_dir_path} -o {build_apk_file_path}" \
         .format(apktool_path=flask_config.apktool_path, 
-                unpack_dir_path=flask_config.unpack_dir_path)
+                unpack_dir_path=flask_config.unpack_dir_path,
+                build_apk_file_path=build_apk_file_path)
 
     ret_mes = str(subprocess.check_output(apktool_format, shell=True))
     if 'ERROR' in ret_mes:
@@ -145,10 +146,16 @@ def unpack_apk():
     if 'ERROR' in ret_mes:
         print("Error", ret_mes)
         return False
-        
+    
+    unpack_classes(flask_config.apk_file_path)
+    dex_to_jar()
+    return True
+
+
+def unpack_classes(apk_file_path):
     z7za_path_format = "\"{z7za_path}\" e -y {apk_file_path} classes.dex -o{classes_dir_path}" \
         .format(z7za_path=flask_config.z7za_path, 
-                apk_file_path=flask_config.apk_file_path,
+                apk_file_path=apk_file_path,
                 classes_dir_path=flask_config.classes_dir_path)
 
     ret_mes = str(subprocess.check_output(z7za_path_format, shell=True))
@@ -157,13 +164,14 @@ def unpack_apk():
         return False
     else:
         print("extract classes.dex success!")
-        
+
+
+def dex_to_jar():
     dex2jar_path_format = "\"{dex2jar_path}\" -f {classes_file_path} -o {classes_jar_path}" \
         .format(dex2jar_path=flask_config.dex2jar_path,
                 classes_file_path=flask_config.classes_file_path,
                 classes_jar_path=flask_config.classes_jar_path)
     ret_mes = str(subprocess.check_output(dex2jar_path_format, shell=True))
-    return True
 
 
 def move_apk_to_dist_dir():
@@ -198,6 +206,12 @@ def jar_to_java():
 
 
 def smali_to_java():
+    for dir_path in [
+        flask_config.classes_dir_path,
+        flask_config.java_code_dir_path
+    ]:
+        clear_dir(dir_path)
+
     dj2_smali_path =  "\"{d2j_smali_path}\" {unpack_dir_path}\smali -o {classes_file_path}" \
         .format(d2j_smali_path=flask_config.d2j_smali_path,
                 unpack_dir_path=flask_config.unpack_dir_path,
@@ -206,10 +220,24 @@ def smali_to_java():
 
     dex2jar_path_format = "\"{dex2jar_path}\" {classes_file_path} -o {classes_jar_path}"\
         .format(dex2jar_path=flask_config.dex2jar_path,
-                classes_file_path=flask_config.classes_file_pat,
+                classes_file_path=flask_config.classes_file_path,
                 classes_jar_path=flask_config.classes_jar_path)
     ret_mes = str(subprocess.check_output(dex2jar_path_format, shell=True))
     jar_to_java()
+
+
+def smali_to_java_by_apktool():
+    for dir_path in [
+        flask_config.classes_dir_path,
+        flask_config.java_code_dir_path
+    ]:
+        clear_dir(dir_path)
+
+    build_apk(flask_config.classes_apk_path)
+    unpack_classes(flask_config.classes_apk_path)
+    dex_to_jar()
+    jar_to_java()
+
 
 
 def start_emulator_device(emulator):
@@ -328,11 +356,14 @@ def get_java_code_path(path):
 
 
 def read_java_code(path):
+    if path[-len('.smali'):] != ".smali":
+        return ''
     java_code_path = get_java_code_path(path)
     file_content = ''
-    with open(java_code_path, 'r') as f:
-        for line in f:
-            file_content += line.rstrip() + '\n'
+    if os.path.exists(java_code_path):
+        with open(java_code_path, 'r') as f:
+            for line in f:
+                file_content += line.rstrip() + '\n'
     return file_content
 
 
@@ -485,11 +516,16 @@ def remove_file():
 
 @app.route('/api/get_java_code', methods=['POST'])
 def get_java_code():
-    print(request.json)
     path = request.json['path']
     return jsonify({
         'java_code': read_java_code(path)
     })
+
+
+@app.route('/api/update_java_code', methods=['PUT'])
+def update_java_code():
+    smali_to_java_by_apktool()
+    return jsonify()
 
 
 @app.route('/api/upload_exists_keystore', methods=['POST'])
@@ -512,7 +548,7 @@ def new_keystore():
 
 @app.route('/api/build_and_sign_apk', methods=['POST'])
 def build_and_sign_apk():
-    build_apk()
+    build_apk(flask_config.new_apk_file_path)
     sign_apk()
     return jsonify()
 

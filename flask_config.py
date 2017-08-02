@@ -15,6 +15,7 @@ unpack_dir_path = None
 classes_dir_path = r'tmp\classes'
 classes_file_path = r'tmp\classes\classes.dex'
 classes_jar_path = r'tmp\classes\classes.jar'
+classes_apk_path = r'tmp\classes\tmp.apk'
 java_code_dir_path = r'tmp\java'
 new_apk_file_path = None
 android_manifest_xml_path = None

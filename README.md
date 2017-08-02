@@ -9,7 +9,9 @@ index
 upload  
 ![picture](picture/upload.JPG)  
 modification
-![picture](picture/modification.JPG)    
+![picture](picture/modification_code.JPG)  
+java
+![picture](picture/modification_java.JPG)  
 exists_keystore  
 ![picture](picture/exists_keystore.JPG)  
 new_keystore  
@@ -28,14 +30,18 @@ install
 目前都沒做什麼防呆，所以請愛惜它。
 請按造此順序使用:  
 upload -> (modification ->) sign -> build -> emulator  
+
+需要loading的地方，都沒做loading的動畫，請耐心等候  
+(upload, update java code, build, install)
   
 
 ## 未來
 1. 讓網頁可以控制android emulator (目前想到用vnc，但android emulator用vnc時，vnc viewer一直黑頻)  
-2. 增加看java code的功能  
-3. 流程圖  
-4. 讓網頁有常用的adb功能，例如： 上傳下載檔案  
-5. 修改xml時，能有即時的畫面顯示  
-6. 新增、刪除資料夾  
-7. 新增Linux版本  
-8. log 目前還有點問題  
+2. 看log的功能 目前還有點問題  
+3. 讓網頁有常用的adb功能，例如： 上傳下載檔案  
+4. 修改xml時，能有即時的畫面顯示  
+5. 新增、刪除資料夾  
+6. 新增Linux版本  
+7. 流程圖  
+8. 包成docker  
+9. 做loading畫面  

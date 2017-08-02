@@ -54,8 +54,8 @@
                 <modal_remove id="add_file" v-if="showRemoveModal" @close="showRemoveModal = false"></modal_remove>
 
                 <!-- right button -->
-                <button type="button" class="pull-right btn btn-success btn-xs" aria-label="Save This"  @click="SaveFile">
-                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="True"></span>
+                <button type="button" class="pull-right btn btn-info btn-xs" aria-label="Update Java Code"  @click="CallUpdateJavaCode">
+                    <span class="glyphicon glyphicon-refresh" aria-hidden="True"></span> Update Java Code
                 </button>
             </div>
 
@@ -101,7 +101,10 @@
                     </div>
 
                     <div class="col-md-6">
-                        <p>Modification</p>
+                        <p>Modification 
+                        <button type="button" class="pull-right btn btn-success btn-xs" aria-label="Save This"  @click="CallSaveFile">
+                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="True"></span>
+                        </button> </p>
                         <div style="height: 400px">
                             <editor editor-id="modification" :content="content_modification" v-on:change-content="changeContent_modification"></editor>
                         </div>
@@ -327,6 +330,9 @@
                 this.treeData.splice(index, 1)
                 this.initCurrentFileObject()
             },
+            CallUpdateJavaCode: function(){
+                java_code.UpdateJavaCode()
+            }
         }, 
         mounted() { this.getTreeData() }
     })
@@ -386,6 +392,9 @@
                         console.log(err)
                     })
                 }
+            },
+            CallSaveFile: function() {
+                file_list.SaveFile()
             }
         }
     })
@@ -430,7 +439,8 @@
         el: "#java_code",
         data: {
             content_java: '',
-            apiUrl_getJavaCode: '/api/get_java_code'
+            apiUrl_getJavaCode: '/api/get_java_code',
+            apiUrl_updateJavaCode: '/api/update_java_code'
         },
         methods: {
             getJavaCode: function(path) {
@@ -438,6 +448,15 @@
                         {headers: {'Content-Type':'application/json; charset=UTF-8'}})
                     .then(function (response) {
                     this.content_java = response.data.java_code
+                }, function (err) {
+                    console.log(err)
+                })
+            },
+            UpdateJavaCode: function() {
+                this.$http.put(this.apiUrl_updateJavaCode)
+                    .then(function (response) {
+                    alert('Update Java Code success!!')
+                    this.getJavaCode(file_list.current_file_object.path)
                 }, function (err) {
                     console.log(err)
                 })
